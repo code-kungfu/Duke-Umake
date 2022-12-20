@@ -1,0 +1,115 @@
+===============================================================================
+UMake 1.2
+Copyright 2002-2004 by Mychaeel <mychaeel@beyondunreal.com>
+===============================================================================
+
+Mail all bug reports and suggestions to Mychaeel <mychaeel@beyondunreal.com>
+
+
+===============================================================================
+Installation
+===============================================================================
+
+Copy the files into a directory of your liking; it doesn't have to be anywhere
+near your Unreal Tournament directory.
+
+
+===============================================================================
+Info
+===============================================================================
+
+If you're using your own favorite text editor for UnrealScript development,
+you're bound to use "ucc make" manually to compile your scripts. Doing so
+involves a big bunch of small steps, some of which have to be repeated every
+time you want to recompile.
+
+
+Compile
+=======
+
+UMake wraps that call to "ucc make" and everything else that's involved in
+compiling an UnrealScript project in a neat, straightforward graphical user
+interface.
+
+All you have to do to compile a project is dropping an UnrealScript source file
+or project directory on the UMake icon (on your desktop, for instance). UMake
+automatically takes care of adding an EditPackages line, creating a backup of
+and deleting the original package file and running "ucc make" afterwards. If an
+error occurs, UMake restores the backup file and displays a the raw compiler
+error message along with a comprehensible explanation of it.
+
+UMake also warns you if you attempt to compile a project that seems to be up to
+date already and lets you cancel the compilation before it starts. In addition,
+you can abort the compilation process in progress whenever you like; UMake
+automatically restores the last valid version of your package then.
+
+
+Integrate
+=========
+
+UMake provides a whole bunch of integration options for your system and your
+favorite text editor. If you like, you can have UMake create an UnrealScript
+file drop target icon on your desktop and right-click menu extensions for
+Explorer to directly compile any project you like.
+
+If your text editor supports it, you can set it up to launch UMake at the press
+of a keyboard shortcut or a toolbar button. If a compilation error occurs,
+UMake provides an "Edit" button that takes you back to the very line and source
+file that caused the problem (if you configure UMake that way).
+
+
+===============================================================================
+Changes
+===============================================================================
+
+Version 1.2.2 (2022-11-29) [unofficial fix by ut99.org]
+* Improve "Rebuild" button.
+* Auto say "Yes" to all compatibility questions, instead of stuck build.
+* Update version number
+* Sources at: https://github.com/SeriousBuggie/unreal-umake
+
+Version 1.2.1 (2020-07-25) [unofficial fix by ut99.org]
+* Fix multimonitor support.
+* Added "Rebuild" button. It glitchy but works in general.
+
+Version 1.2 (2004-06-01)
+* Added support for the CacheRecordPath setting required as of build 3204.
+* The make.ini file is only written to disk when it changes.
+
+Version 1.1 (2002-11-10)
+* Added option to always automatically display compilation details.
+* Added command-line parameter /auto which automatically scans the given game
+  base directory for projects and compiles the most recently modified one.
+* Added extended options for desktop shortcut creation in Options dialog.
+* Added drop-down box with recently compiled projects to launcher.
+* Output parser extracts class names from error messages that don't explicitely
+  mention a source file name and reconstructs the source file name from that.
+
+Version 1.0 (2002-11-06)
+* Initial release.
+
+
+===============================================================================
+Disclaimer
+===============================================================================
+
+UMake is freeware and is provided "as is" without warranty of any kind, either
+express or implied, including but not limited to the implied warranties of
+merchantability and fitness for a particular purpose. In no event shall the
+author be liable for any damages whatsoever including direct, indirect,
+incidental, consequential, loss of business profits or special damages, even if
+the author has been advised of the possibility of such damages.
+
+
+===============================================================================
+Copyright/Permissions
+===============================================================================
+
+Copyright 2002 by Mychaeel <mychaeel@beyondunreal.com>
+
+Free for noncommercial use and distribution. For anything else please contact
+me in advance. I'm likely not to object to anything, but I'd like to know about
+it before the fact. Thanks for your understanding.
+
+
+===============================================================================
