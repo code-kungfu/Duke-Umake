@@ -156,6 +156,11 @@ implementation
 
 {$REGION '-> Local Uses Clause <-'}
 uses
+  { RTL }
+  System.UITypes,
+  System.Types,
+
+  { UMake Forms }
   UMake.Forms.Shortcuts;
 {$ENDREGION}
 
@@ -540,10 +545,10 @@ end;
 
 procedure TfrmOptions.ButtonShortcutDesktopClick(Sender: TObject);
 begin
-  FormShortcuts.Left := Left + (Width  - FormShortcuts.Width)  div 2;
-  FormShortcuts.Top  := Top  + (Height - FormShortcuts.Height) div 2;
-  FormShortcuts.Configuration := Configuration;
-  FormShortcuts.ShowModal;
+  frmShortcuts.Left := Left + (Width  - frmShortcuts.Width)  div 2;
+  frmShortcuts.Top  := Top  + (Height - frmShortcuts.Height) div 2;
+  frmShortcuts.Configuration := Configuration;
+  frmShortcuts.ShowModal;
 
   PanelFocusShortcuts.SetFocus;
 end;

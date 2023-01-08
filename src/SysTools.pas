@@ -29,7 +29,7 @@ type
 
 procedure Log(TextLog: string);
 
-procedure ReadFiles(TextDirectory: string; TextFileMask: string; var TextFiles: TFileNames; var CountFiles: Integer);
+//procedure ReadFiles(TextDirectory: string; TextFileMask: string; var TextFiles: TFileNames; var CountFiles: Integer);
 function BrowseFolder(HandleWindowParent: HWnd; TextTitle: string): string;
 
 function GetFileCount(TextFileMask: string): Integer;
@@ -37,7 +37,7 @@ function GetRelativePath(TextFile: string; TextFileReference: string): string;
 function GetAbsolutePath(TextFile: string; TextFileReference: string): string;
 function GetDesktopPath: string;
 function GetTempPath: string;
-function GetTempFile(TextPrefix: string): string;
+//function GetTempFile(TextPrefix: string): string;
 function GetLongFile(TextPath: string; TextFileShort: string): string;
 function GetLongPath(TextPathShort: string): string;
 function GetFirstParam(TextLine: string): string;
@@ -186,33 +186,33 @@ begin
   end;
 end;
 
-procedure ReadFiles(TextDirectory: string; TextFileMask: string; var TextFiles: TFileNames; var CountFiles: Integer);
-var
-  ResultFind: Integer;
-  SearchRec: TSearchRec;
-begin
-  try
-    TextDirectory := IncludeTrailingBackslash(ExpandFileName(TextDirectory));
-    ResultFind := FindFirst(TextDirectory + TextFileMask, faReadOnly + faHidden + faArchive, SearchRec);
-
-    while ResultFind = 0 do
-    begin
-      Inc(CountFiles);
-
-           if Length(TextFiles) = 0          then SetLength(TextFiles, 1)
-      else if Length(TextFiles) < CountFiles then SetLength(TextFiles, Length(TextFiles) * 2);
-
-      TextFiles[CountFiles - 1] := TextDirectory + SearchRec.Name;
-
-      ResultFind := FindNext(SearchRec);
-    end;
-
-    FindClose(SearchRec);
-
-  except
-    on Exception do;
-  end;
-end;
+//procedure ReadFiles(TextDirectory: string; TextFileMask: string; var TextFiles: TFileNames; var CountFiles: Integer);
+//var
+//  ResultFind: Integer;
+//  SearchRec: TSearchRec;
+//begin
+//  try
+//    TextDirectory := IncludeTrailingBackslash(ExpandFileName(TextDirectory));
+//    ResultFind := FindFirst(TextDirectory + TextFileMask, faReadOnly + faHidden + faArchive, SearchRec);
+//
+//    while ResultFind = 0 do
+//    begin
+//      Inc(CountFiles);
+//
+//           if Length(TextFiles) = 0          then SetLength(TextFiles, 1)
+//      else if Length(TextFiles) < CountFiles then SetLength(TextFiles, Length(TextFiles) * 2);
+//
+//      TextFiles[CountFiles - 1] := TextDirectory + SearchRec.Name;
+//
+//      ResultFind := FindNext(SearchRec);
+//    end;
+//
+//    FindClose(SearchRec);
+//
+//  except
+//    on Exception do;
+//  end;
+//end;
 
 function BrowseFolder(HandleWindowParent: HWnd; TextTitle: string): string;
 var
@@ -360,26 +360,19 @@ begin
   Registry.Free;
 end;
 
-
 function GetTempPath: string;
-var
-  BufferPath: array [0..MAX_PATH] of Char;
 begin
-  if Windows.GetTempPath(SizeOf(BufferPath), BufferPath) <> 0
-    then Result := BufferPath
-    else Result := '';
+  Result := TPath.GetTempPath
 end;
 
-
-function GetTempFile(TextPrefix: string): string;
-var
-  BufferFile: array [0..MAX_PATH] of Char;
-begin
-  if Windows.GetTempFileName(PChar(GetTempPath), PChar(TextPrefix), 0, BufferFile) <> 0
-    then Result := BufferFile
-    else Result := '';
-end;
-
+//function GetTempFile(TextPrefix: string): string;
+//var
+//  BufferFile: array [0..MAX_PATH] of Char;
+//begin
+//  if Windows.GetTempFileName(PChar(GetTempPath), PChar(TextPrefix), 0, BufferFile) <> 0
+//    then Result := BufferFile
+//    else Result := '';
+//end;
 
 function GetLongFile(TextPath: string; TextFileShort: string): string;
 var
@@ -396,28 +389,8 @@ begin
 end;
 
 function GetLongPath(TextPathShort: string): string;
-var
-  IndexCharSeparator: Integer;
-  TextFileLong: string;
 begin
-  Result := '';
-  TextPathShort := ExpandFileName(TextPathShort);
-
-  while Length(TextPathShort) > 0 do
-  begin
-    IndexCharSeparator := Pos('\', TextPathShort) - 1;
-    if IndexCharSeparator < 0 then
-      IndexCharSeparator := Length(TextPathShort);
-
-    TextFileLong := Copy(TextPathShort, 1, IndexCharSeparator);
-    if Length(Result) = 0 then
-      TextFileLong := UpperCase(TextFileLong)
-    else
-      TextFileLong := '\' + GetLongFile(Result, TextFileLong);
-
-    AppendStr(AnsiString(Result), AnsiString(TextFileLong));
-    Delete(TextPathShort, 1, IndexCharSeparator + 1);
-  end;
+  Result := TPath.GetFullPath(TextPathShort);
 end;
 
 function GetFirstParam(TextLine: string): string;
@@ -604,14 +577,14 @@ end;
 
 procedure TPipedProcess.Launch(FlagsProcess: Cardinal);
 var
-  HandlePipeStdoutOld: Cardinal;
-  HandlePipeStdoutRead: Cardinal;
-  HandlePipeStdoutReadDuplicate: Cardinal;
-  HandlePipeStdoutWrite: Cardinal;
-  HandlePipeStderrOld: Cardinal;
-  HandlePipeStderrRead: Cardinal;
-  HandlePipeStderrReadDuplicate: Cardinal;
-  HandlePipeStderrWrite: Cardinal;
+  HandlePipeStdoutOld: NativeUInt;
+  HandlePipeStdoutRead: NativeUInt;
+  HandlePipeStdoutReadDuplicate: NativeUInt;
+  HandlePipeStdoutWrite: NativeUInt;
+  HandlePipeStderrOld: NativeUInt;
+  HandlePipeStderrRead: NativeUInt;
+  HandlePipeStderrReadDuplicate: NativeUInt;
+  HandlePipeStderrWrite: NativeUInt;
   PointerDirectory: PChar;
   StructProcessInformation: TProcessInformation;
   StructSecurityAttributes: TSecurityAttributes;

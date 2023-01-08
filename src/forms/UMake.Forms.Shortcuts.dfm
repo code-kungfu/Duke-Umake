@@ -1,4 +1,4 @@
-object frmShotcuts: TfrmShotcuts
+object frmShortcuts: TfrmShortcuts
   Left = 422
   Top = 296
   BorderStyle = bsDialog
@@ -19,7 +19,7 @@ object frmShotcuts: TfrmShotcuts
   object LabelExplanationGeneric: TLabel
     Left = 42
     Top = 36
-    Width = 307
+    Width = 303
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -32,7 +32,7 @@ object frmShotcuts: TfrmShotcuts
   object LabelExplanationProject: TLabel
     Left = 42
     Top = 104
-    Width = 307
+    Width = 303
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -52,7 +52,7 @@ object frmShotcuts: TfrmShotcuts
   object LabelExplanationAuto: TLabel
     Left = 42
     Top = 172
-    Width = 307
+    Width = 303
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -65,7 +65,7 @@ object frmShotcuts: TfrmShotcuts
   object BevelGeneric: TBevel
     Left = 168
     Top = 20
-    Width = 189
+    Width = 185
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 193
@@ -73,7 +73,7 @@ object frmShotcuts: TfrmShotcuts
   object BevelProject: TBevel
     Left = 179
     Top = 88
-    Width = 178
+    Width = 174
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 182
@@ -81,7 +81,7 @@ object frmShotcuts: TfrmShotcuts
   object BevelAuto: TBevel
     Left = 208
     Top = 156
-    Width = 149
+    Width = 145
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 153
@@ -133,15 +133,16 @@ object frmShotcuts: TfrmShotcuts
   object ComboBoxGame: TComboBox
     Left = 41
     Top = 210
-    Width = 284
+    Width = 280
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     Sorted = True
     TabOrder = 3
     OnChange = ComboBoxGameChange
+    ExplicitWidth = 276
   end
   object ButtonBrowseGame: TBitBtn
-    Left = 332
+    Left = 328
     Top = 208
     Width = 25
     Height = 25
@@ -174,9 +175,10 @@ object frmShotcuts: TfrmShotcuts
       C0C0C0C0C0C0C0C0C0C0}
     TabOrder = 4
     OnClick = ButtonBrowseGameClick
+    ExplicitLeft = 324
   end
   object ButtonCreate: TButton
-    Left = 136
+    Left = 132
     Top = 252
     Width = 145
     Height = 25
@@ -186,9 +188,11 @@ object frmShotcuts: TfrmShotcuts
     ModalResult = 1
     TabOrder = 5
     OnClick = ButtonCreateClick
+    ExplicitLeft = 128
+    ExplicitTop = 251
   end
   object ButtonCancel: TButton
-    Left = 284
+    Left = 280
     Top = 252
     Width = 81
     Height = 25
@@ -197,6 +201,8 @@ object frmShotcuts: TfrmShotcuts
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 6
+    ExplicitLeft = 276
+    ExplicitTop = 251
   end
   object PanelFocus: TPanel
     Left = 0

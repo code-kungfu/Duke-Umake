@@ -15,7 +15,6 @@ uses
   Vcl.FileCtrl,
 
   { RTL }
-  System.SysUtils,
   System.Classes,
   System.Math,
 
@@ -41,15 +40,12 @@ type
   private
     FTextMessageFormatted: string;
     FTextExplanation:      string;
-
     function GetTextMessageFormatted: string;
     function GetTextExplanation:      string;
-
   public
     IndexLine:   Integer;
     TextFile:    string;
     TextMessage: string;
-
     property TextMessageFormatted: string read GetTextMessageFormatted;
     property TextExplanation:      string read GetTextExplanation;
   end;
@@ -85,7 +81,6 @@ type
     TabSheetMessages: TTabSheet;
     TabSheetWarnings: TTabSheet;
     ButtonRebuild: TButton;
-
     procedure FormShow(Sender: TObject);
     procedure ButtonAbortClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -98,15 +93,12 @@ type
     procedure ButtonWarningNextClick(Sender: TObject);
     procedure TabSheetWarningsResize(Sender: TObject);
     procedure TabSheetErrorResize(Sender: TObject);
-
   private
     Configuration: TConfiguration;
     Options: TOptions;
-
     IndexWarning: Integer;
     InfoError: TInfoError;
     ListInfoWarning: TList;
-
     FlagClosing: Boolean;
     PipedProcess: TPipedProcess;
     RegExprClass: TRegExpr;
@@ -121,7 +113,6 @@ type
     TextBufferPipe: string;
     TextFilePackageBackup: string;
     TextFilePackageOriginal: string;
-
     procedure ErrorMessageBox(TextMessage: string; OptionsMessage: Integer = MB_ICONERROR);
     procedure ErrorDetails(InfoError: TInfoError; LabelLocation: TLabel; RichEdit: TRichEdit);
     procedure PipedProcessDebug(Sender: TObject; const DebugEvent: TDebugEvent; var ContinueStatus: Cardinal);
@@ -130,23 +121,24 @@ type
     procedure UpdateDetailsError;
     procedure UpdateDetailsWarning;
     procedure RichEditMessagesAppend(TextAppend: string; ColorAppend: TColor);
-
   public
     procedure Startup;
   end;
 
-
 var
   frmMainForm: TfrmMainForm;
-
 
 implementation
 
 {$REGION '-> Local Uses Clause <-'}
 uses
+  { RTL }
+  System.IOUtils,
+  System.SysUtils,
+
   { UMake Forms }
   UMake.Forms.Options,
-  UMake.Forms.Launch;
+  UMake.Forms.Launcher;
 {$ENDREGION}
 
 const
@@ -159,17 +151,18 @@ const
 (*****************************************************************************)
 
 function JoinArray(TextSeparator: string; ArrayStrings: array of string): string;
-var
-  IndexString: Integer;
+//var
+//  IndexString: Integer;
 begin
-  Result := '';
-
-  for IndexString := 0 to High(ArrayStrings) do
-  begin
-    AppendStr(Result, ArrayStrings[IndexString]);
-    if IndexString < High(ArrayStrings) then
-      AppendStr(Result, TextSeparator);
-  end;
+  Result := Result.Join(TextSeparator, ArrayStrings);
+//  Result := '';
+//
+//  for IndexString := 0 to High(ArrayStrings) do
+//  begin
+//    AppendStr(Result, ArrayStrings[IndexString]);
+//    if IndexString < High(ArrayStrings) then
+//      AppendStr(Result, TextSeparator);
+//  end;
 end;
 
 
@@ -320,8 +313,8 @@ begin
   begin
     if FlagSetup then
     begin
-      FormOptions.Options := Options;
-      FormOptions.ShowModal;
+      frmOptions.Options := Options;
+      frmOptions.ShowModal;
       Close;
     end
 
@@ -332,9 +325,9 @@ begin
     end
 
     else begin
-      FormLaunch.Options := Options;
-      if FormLaunch.ShowModal = mrOk
-        then Configuration := FormLaunch.Configuration
+      frmLauncher.Options := Options;
+      if frmLauncher.ShowModal = mrOk
+        then Configuration := frmLauncher.Configuration
         else Close;
     end;
   end
@@ -425,9 +418,9 @@ begin
 
     if FlagSetup then
     begin
-      FormOptions.Configuration := Configuration;
-      FormOptions.Options := Options;
-      FormOptions.ShowModal;
+      frmOptions.Configuration := Configuration;
+      frmOptions.Options := Options;
+      frmOptions.ShowModal;
       Close;
     end
     else begin
@@ -448,10 +441,10 @@ begin
 
       if not FileExists(IncludeTrailingBackslash(Configuration.DirGame) + Configuration.Package + '\make.ini') then
       begin
-        FormOptions.Configuration := Configuration;
-        FormOptions.Options := Options;
+        frmOptions.Configuration := Configuration;
+        frmOptions.Options := Options;
 
-        if FormOptions.ShowModal <> mrOk then
+        if frmOptions.ShowModal <> mrOk then
         begin
           Close;
           Exit;
@@ -601,8 +594,8 @@ begin
   begin
     TextFilePackageBackup := TextFilePackageOriginal + '.backup';
 
-    if FileExists(TextFilePackageBackup) then
-      DeleteFile(TextFilePackageBackup);
+    if TFile.Exists(TextFilePackageBackup) then
+      TFile.Delete(TextFilePackageBackup);
 
     while not RenameFile(TextFilePackageOriginal, TextFilePackageBackup) do
     begin
@@ -703,7 +696,7 @@ begin
 
   RichEditMessages.Lines.BeginUpdate;
 
-  AppendStr(TextBufferPipe, TextData);
+  TextBufferPipe := TextBufferPipe + TextData;
   while Length(TextBufferPipe) > 0 do
   begin
     IndexCharSeparatorCR := Pos(#13, TextBufferPipe);
@@ -732,7 +725,7 @@ begin
     begin
       TextLine := Format('----- %s', [RegExprPackage.Match[1]]);
       if RegExprPackage.SubExprMatchCount > 1 then
-        AppendStr(TextLine, Format(' (%s)', [RegExprPackage.Match[3]]));
+        TextLine := TextLine + Format(' (%s)', [RegExprPackage.Match[3]]);
 
       if not FlagClosing then
       begin
@@ -953,11 +946,12 @@ end;
 
 procedure TfrmMainForm.ButtonOptionsClick(Sender: TObject);
 begin
-  FormOptions.Configuration := Configuration;
-  FormOptions.Options := Options;
-  FormOptions.ShowModal;
+  frmOptions.Configuration := Configuration;
+  frmOptions.Options := Options;
+  frmOptions.ShowModal;
 
-  if not Visible then Close;
+  if not Visible then
+    Close;
 end;
 
 
@@ -1016,7 +1010,7 @@ begin
     CanClose := False;
   end
   else begin
-    CanClose := not FormOptions.Visible;
+    CanClose := not frmOptions.Visible;
   end;
 end;
 

@@ -158,9 +158,9 @@ end;
 
 procedure TfrmLauncher.ButtonOptionsClick(Sender: TObject);
 begin
-  FormOptions.Configuration := Configuration;
-  FormOptions.Options := Options;
-  FormOptions.ShowModal;
+  frmOptions.Configuration := Configuration;
+  frmOptions.Options := Options;
+  frmOptions.ShowModal;
 end;
 
 end.

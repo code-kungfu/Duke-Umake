@@ -99,19 +99,19 @@ procedure TInternetShortcut.SetURL(URL: string);
 begin
   if Assigned(UniformResourceLocator) then
   begin
-    UniformResourceLocator.SetURL(PChar(URL), IURL_SETURL_FL_GUESS_PROTOCOL);
+    UniformResourceLocator.SetURL(PAnsiChar(URL), IURL_SETURL_FL_GUESS_PROTOCOL);
   end;
 end;
 
 function TInternetShortcut.GetURL: string;
 var
-  URL: PChar;
+  URL: PAnsiChar;
   Malloc: IMalloc;
 begin
   if Assigned(UniformResourceLocator) then
   begin
     UniformResourceLocator.GetURL(URL);
-    GetURL := URL;
+    GetURL := string(URL);
     //if SHGetMalloc(Malloc) = NOERROR then
     if CoGetMalloc(MEMCTX_TASK, Malloc) = NOERROR then
     begin
@@ -160,7 +160,7 @@ end;
 constructor TFileShortcut.Create;
 begin
   CoInitialize(nil);
-  CoCreateInstance(Ole2.TGUID(CLSID_ShellLink), nil, CLSCTX_INPROC_SERVER, Ole2.TGUID(IID_IShellLinkA), ShellLink);
+  CoCreateInstance(TGUID(CLSID_ShellLink), nil, CLSCTX_INPROC_SERVER, TGUID(IID_IShellLinkA), ShellLink);
 end;
 
 destructor TFileShortcut.Destroy;

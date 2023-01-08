@@ -37,7 +37,7 @@ uses
 (*****************************************************************************)
 
 type
-  TfrmShotcuts = class(TForm)
+  TfrmShortcuts = class(TForm)
     BevelAuto: TBevel;
     BevelGeneric: TBevel;
     BevelProject: TBevel;
@@ -66,7 +66,7 @@ type
   end;
 
 var
-  frmShotcuts: TfrmShotcuts;
+  frmShortcuts: TfrmShortcuts;
 
 implementation
 
@@ -76,7 +76,7 @@ implementation
 (*  TFormShortcuts
 (*****************************************************************************)
 
-procedure TfrmShotcuts.FormShow(Sender: TObject);
+procedure TfrmShortcuts.FormShow(Sender: TObject);
 var
   IndexKey: Integer;
   Registry: TRegistry;
@@ -134,7 +134,7 @@ begin
   end;
 end;
 
-procedure TfrmShotcuts.ButtonBrowseGameClick(Sender: TObject);
+procedure TfrmShortcuts.ButtonBrowseGameClick(Sender: TObject);
 var
   TextDirGame: string;
 begin
@@ -145,19 +145,19 @@ begin
   ComboBoxGame.SetFocus;
 end;
 
-procedure TfrmShotcuts.ComboBoxGameChange(Sender: TObject);
+procedure TfrmShortcuts.ComboBoxGameChange(Sender: TObject);
 begin
   RadioButtonAuto.Checked := True;
 end;
 
-procedure TfrmShotcuts.ButtonCreateClick(Sender: TObject);
+procedure TfrmShortcuts.ButtonCreateClick(Sender: TObject);
 begin
        if RadioButtonGeneric.Checked then CreateShortcutGeneric
   else if RadioButtonProject.Checked then CreateShortcutProject
   else if RadioButtonAuto   .Checked then CreateShortcutAuto;
 end;
 
-procedure TfrmShotcuts.CreateShortcutGeneric;
+procedure TfrmShortcuts.CreateShortcutGeneric;
 var
   ShortcutDesktop: TFileShortcut;
 begin
@@ -168,7 +168,7 @@ begin
   ShortcutDesktop.Free;
 end;
 
-procedure TfrmShotcuts.CreateShortcutProject;
+procedure TfrmShortcuts.CreateShortcutProject;
 var
   ShortcutDesktop: TFileShortcut;
 begin
@@ -180,7 +180,7 @@ begin
   ShortcutDesktop.Free;
 end;
 
-procedure TfrmShotcuts.CreateShortcutAuto;
+procedure TfrmShortcuts.CreateShortcutAuto;
 var
   ShortcutDesktop: TFileShortcut;
   TextDirGame: string;
