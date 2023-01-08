@@ -147,26 +147,6 @@ const
 {$R *.DFM}
 
 (*****************************************************************************)
-(*  Global
-(*****************************************************************************)
-
-function JoinArray(TextSeparator: string; ArrayStrings: array of string): string;
-//var
-//  IndexString: Integer;
-begin
-  Result := Result.Join(TextSeparator, ArrayStrings);
-//  Result := '';
-//
-//  for IndexString := 0 to High(ArrayStrings) do
-//  begin
-//    AppendStr(Result, ArrayStrings[IndexString]);
-//    if IndexString < High(ArrayStrings) then
-//      AppendStr(Result, TextSeparator);
-//  end;
-end;
-
-
-(*****************************************************************************)
 (*  TInfoError
 (*****************************************************************************)
 
@@ -243,7 +223,6 @@ begin
   Result := FTextExplanation;
 end;
 
-
 (*****************************************************************************)
 (*  TFormMain
 (*****************************************************************************)
@@ -265,7 +244,6 @@ begin
 
   Constraints.MaxHeight := Constraints.MinHeight;
 end;
-
 
 procedure TfrmMainForm.Startup;
 var
@@ -513,12 +491,10 @@ begin
   end;
 end;
 
-
 procedure TfrmMainForm.ErrorMessageBox(TextMessage: string; OptionsMessage: Integer);
 begin
   Application.MessageBox(PChar(TextMessage), PChar(Application.Title), OptionsMessage);
 end;
-
 
 procedure TfrmMainForm.ErrorDetails(InfoError: TInfoError; LabelLocation: TLabel; RichEdit: TRichEdit);
 var
@@ -582,7 +558,6 @@ begin
     ButtonDetailsClick(ButtonDetails);
 end;
 
-
 procedure TfrmMainForm.FormShow(Sender: TObject);
 var
   TextCommand: string;
@@ -610,10 +585,8 @@ begin
   ButtonAbort.Caption := '&Abort';
   ButtonAbort.Enabled := False;
   ButtonAbort.Cancel  := False;
-
   RichEditMessages.Paragraph.FirstIndent := 2;
   RichEditMessages.Paragraph.LeftIndent  := 6;
-
   RegExprClass          := TRegExpr.Create;
   RegExprPackage        := TRegExpr.Create;
   RegExprParsing        := TRegExpr.Create;
@@ -633,14 +606,11 @@ begin
   RegExprErrorParse    .Expression := '^Script vs. class name mismatch \((([^/]+))/[^)]+\)|^Bad class definition|^Superclass \S+ of class ((\S+)) not found|^([^:]+: )Unknown property|^ObjectProperty ([^.]+\.[^.]+\.)';
   RegExprWarningCompile.Expression := '^([A-Za-z]:\\.*?\\Classes\\\w+\.uc)\s*\((\d+)\)\s*:\s*ExecWarning,\s*(.*)';
   RegExprWarningParse  .Expression := '^Failed loading\s+.*';
-
   PageControlDetails.ActivePage := TabSheetMessages;
   TabSheetError   .TabVisible := False;
   TabSheetWarnings.TabVisible := False;
-
   InfoError := TInfoError.Create;
   ListInfoWarning := TList.Create;
-
   Configuration.Write;
   TextDirSystem := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
 
@@ -649,7 +619,6 @@ begin
      GetQuotedParam(GetRelativePath(IncludeTrailingBackslash(Configuration.DirPackage) + 'make.ini', IncludeTrailingBackslash(TextDirSystem)))]);
 
   ProgressBar.Position := 0;
-
   PipedProcess := TPipedProcess.Create;
   PipedProcess.Directory   := TextDirSystem;
   PipedProcess.Command     := TextCommand;
@@ -670,18 +639,13 @@ begin
   // nothing
 end;
 
-
 procedure TfrmMainForm.PipedProcessOutput(Sender: TObject; const TextData: string; Pipe: TPipedOutput);
-
-
   function FormatError(TextType: string; InfoError: TInfoError): string;
   begin
     Result := Format('%s in %s (%d): %s', [TextType, ExtractFileName(InfoError.TextFile),
                                                                      InfoError.IndexLine,
                                                                      InfoError.TextMessage]);
   end;
-
-
 var
   ColorLine: TColor;
   IndexCharSeparator: Integer;
@@ -823,7 +787,6 @@ begin
   RichEditMessages.Lines.EndUpdate;
 end;
 
-
 procedure TfrmMainForm.PipedProcessTerminate(Sender: TObject);
 begin
   if not FileExists(TextFilePackageOriginal) and FileExists(TextFilePackageBackup) then
@@ -886,7 +849,6 @@ begin
   end;
 end;
 
-
 procedure TfrmMainForm.RichEditMessagesAppend(TextAppend: string; ColorAppend: TColor);
 begin
   RichEditMessages.SelStart := $7fffffff;
@@ -894,15 +856,12 @@ begin
   RichEditMessages.SelText := TextAppend + CRLF;
 end;
 
-
 procedure TfrmMainForm.UpdateDetailsError;
 begin
   ErrorDetails(InfoError, LabelErrorLocation, RichEditError);
-
   ButtonErrorEdit.Enabled := Length(InfoError.TextFile) > 0;
   TabSheetError.TabVisible := True;
 end;
-
 
 procedure TfrmMainForm.UpdateDetailsWarning;
 var
@@ -910,19 +869,15 @@ var
 begin
   ErrorDetails(ListInfoWarning[IndexWarning], LabelWarningLocation, RichEditWarning);
   LabelWarningNumber.Caption := Format('(%d of %d)', [IndexWarning + 1, ListInfoWarning.Count]);
-
   ControlFocused := ActiveControl;
-
   ButtonWarningPrev.Enabled := IndexWarning > 0;
   ButtonWarningNext.Enabled := IndexWarning < ListInfoWarning.Count - 1;
-
   if Assigned(ControlFocused) and not ControlFocused.Enabled then
     StaticTextProgress.SetFocus;
 
   ButtonWarningEdit.Enabled := Length(TInfoError(ListInfoWarning[IndexWarning]).TextFile) > 0;
   TabSheetWarnings.TabVisible := True;
 end;
-
 
 procedure TfrmMainForm.ButtonWarningPrevClick(Sender: TObject);
 begin
@@ -933,7 +888,6 @@ begin
   end;
 end;
 
-
 procedure TfrmMainForm.ButtonWarningNextClick(Sender: TObject);
 begin
   if IndexWarning < ListInfoWarning.Count - 1 then
@@ -942,7 +896,6 @@ begin
     UpdateDetailsWarning;
   end;
 end;
-
 
 procedure TfrmMainForm.ButtonOptionsClick(Sender: TObject);
 begin
@@ -954,48 +907,38 @@ begin
     Close;
 end;
 
-
 procedure TfrmMainForm.ButtonAbortClick(Sender: TObject);
 begin
   Close;
 end;
 
-
 procedure TfrmMainForm.ButtonDetailsClick(Sender: TObject);
 begin
   Constraints.MaxWidth  := 0;
   Constraints.MaxHeight := 0;
-
   ClientHeight := ClientHeight + 248;
   Constraints.MinHeight := Constraints.MinHeight + 200;
-
   PageControlDetails.Height := ClientHeight - PageControlDetails.Top - PageControlDetails.Left;
   PageControlDetails.Enabled := True;
-
   ButtonDetails.Enabled := False;
 end;
-
 
 procedure TfrmMainForm.ButtonErrorEditClick(Sender: TObject);
 begin
   Options.PerformEdit(Configuration, InfoError.TextFile, InfoError.IndexLine);
-
   Hide;
   Close;
 end;
-
 
 procedure TfrmMainForm.TabSheetErrorResize(Sender: TObject);
 begin
   RichEditError.Repaint;
 end;
 
-
 procedure TfrmMainForm.TabSheetWarningsResize(Sender: TObject);
 begin
   RichEditWarning.Repaint;
 end;
-
 
 procedure TfrmMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -1014,13 +957,11 @@ begin
   end;
 end;
 
-
 procedure TfrmMainForm.FormDestroy(Sender: TObject);
 begin
   Configuration.Free;
   Options.Free;
   PipedProcess.Free;
-
   RegExprClass.Free;
   RegExprCompiling.Free;
   RegExprCompleted.Free;

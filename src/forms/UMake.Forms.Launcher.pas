@@ -135,7 +135,7 @@ end;
 
 procedure TfrmLauncher.ButtonCloseClick(Sender: TObject);
 begin
-  Close;
+  //Close;
 end;
 
 procedure TfrmLauncher.ComboBoxProjectChange(Sender: TObject);
