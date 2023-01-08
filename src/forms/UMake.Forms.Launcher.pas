@@ -51,6 +51,7 @@ type
     Note2: TLabel;
     Label1: TLabel;
     procedure ButtonBrowseProjectClick(Sender: TObject);
+    procedure ButtonCloseClick(Sender: TObject);
     procedure ButtonOptionsClick(Sender: TObject);
     procedure ComboBoxProjectChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -132,6 +133,11 @@ begin
   ComboBoxProject.SetFocus;
 end;
 
+procedure TfrmLauncher.ButtonCloseClick(Sender: TObject);
+begin
+  Close;
+end;
+
 procedure TfrmLauncher.ComboBoxProjectChange(Sender: TObject);
 var
   TextDirPackage: string;
@@ -153,7 +159,7 @@ begin
   end;
 
   ButtonCompile.Enabled := Assigned(Configuration);
-  ButtonCompile.Default := Assigned(Configuration);    
+  ButtonCompile.Default := Assigned(Configuration);
 end;
 
 procedure TfrmLauncher.ButtonOptionsClick(Sender: TObject);

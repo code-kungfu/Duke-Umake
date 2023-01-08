@@ -240,6 +240,9 @@ begin
   end;
 
   PageControlPerform.ActivePage := TabSheetPerformSuccess;
+  {$IF Defined(DEBUG)}
+  TabSheetProject.TabVisible := True;
+  {$ENDIF}
 end;
 
 procedure TfrmOptions.FormActivate(Sender: TObject);

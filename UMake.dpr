@@ -23,8 +23,8 @@ begin
 
   Screen.Cursors[crHandPoint] := LoadCursor(HInstance, 'HANDCURSOR');
   Application.Initialize;
-  TStyleManager.TrySetStyle('Windows10');
-  Application.Title := 'UMake for Duke Nukem 2001';
+  TStyleManager.TrySetStyle('Windows10 Charcoal');
+  Application.Title := 'UMake for Duke Nukem Forever 2001';
   Application.CreateForm(TfrmLauncher, frmLauncher);
   Application.CreateForm(TfrmMainForm, frmMainForm);
   Application.CreateForm(TfrmOptions, frmOptions);

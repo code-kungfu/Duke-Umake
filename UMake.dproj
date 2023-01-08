@@ -46,9 +46,14 @@
         <DCC_Alignment>1</DCC_Alignment>
         <DCC_DcuOutput>Binaries</DCC_DcuOutput>
         <DCC_DebugInformation>1</DCC_DebugInformation>
+        <DCC_DynamicBase>false</DCC_DynamicBase>
+        <DCC_HighEntropyVa>false</DCC_HighEntropyVa>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_PEOSVersion>5.1</DCC_PEOSVersion>
+        <DCC_PESubSysVersion>5.1</DCC_PESubSysVersion>
         <DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
+        <DCC_TSAware>false</DCC_TSAware>
         <DCC_UsePackage>Vcl50;Vclx50;VclSmp50;dclocx50;dclaxserver50;Vcldb50;SyntaxComp;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_WriteableConstants>true</DCC_WriteableConstants>
         <VerInfo_AutoGenVersion>true</VerInfo_AutoGenVersion>
