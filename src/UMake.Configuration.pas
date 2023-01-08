@@ -1,12 +1,20 @@
-unit UMake_Configuration;
-
+﻿unit UMake.Configuration;
 
 interface
 
-
+{$REGION '-> Global Uses Clause <-'}
 uses
-  Classes, SysUtils, SysTools, FileCtrl, Hashes;
+  { RTL }
+  System.Classes,
+  System.SysUtils,
 
+  { VCL }
+  Vcl.FileCtrl,
+
+  { Misc Libraries }
+  SysTools,
+  Hashes;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TConfiguration
@@ -30,32 +38,23 @@ type
     TextFileIniGame: string;
     TextFileIniPackage: string;
     TextNamePackage: string;
-
     function FindIniGame: Boolean;
     function FindIniPackage: Boolean;
-
     procedure StringListPathsChange(Sender: TObject);
-
   public
     StringListPaths: TStringList;
     StringListPackages: TStringList;
-
     constructor Create(ATextNamePackage: string; ATextDirGame: string);
     destructor Destroy; override;
-
     procedure Read;
     procedure Write;
-
     function FindFilePackage(TextPackage: string): string;
-
     property Package:    string read TextNamePackage;
     property DirGame:    string read TextDirGame;
     property DirPackage: string read TextDirPackage;
   end;
 
-
 implementation
-
 
 (*****************************************************************************)
 (*  TConfiguration
@@ -85,16 +84,13 @@ begin
   StringListPaths.OnChange := StringListPathsChange;
 end;
 
-
 destructor TConfiguration.Destroy;
 begin
   HashFilePackage.Free;
   StringListPaths.Free;
   StringListPackages.Free;
-
   inherited;
 end;
-
 
 function TConfiguration.FindIniGame: Boolean;
 var
@@ -137,13 +133,11 @@ begin
   FindClose(SearchRecIni);
 end;
 
-
 function TConfiguration.FindIniPackage: Boolean;
 begin
   TextFileIniPackage := IncludeTrailingBackslash(TextDirPackage) + 'make.ini';
   Result := FileExists(TextFileIniPackage);
 end;
-
 
 procedure TConfiguration.Read;
 var
@@ -202,7 +196,6 @@ var
     CloseFile(FileIni);
   end;
 
-
 var
   FlagFound: Boolean;
   IndexPackage: Integer;
@@ -227,7 +220,6 @@ begin
   if not FlagFound then
     StringListPackages.Add(TextNamePackage);
 end;
-
 
 procedure TConfiguration.Write;
 var
@@ -294,7 +286,6 @@ var
     end;
   end;
 
-
   procedure InsertSetting(TextSection: string; TextName: string; TextSetting: string);
   var
     StringListSetting: TStringList;
@@ -358,12 +349,10 @@ begin
   StringListIni.Free;
 end;
 
-
 procedure TConfiguration.StringListPathsChange(Sender: TObject);
 begin
   HashFilePackage.Clear;
 end;
-
 
 function TConfiguration.FindFilePackage(TextPackage: string): string;
 var
@@ -391,6 +380,5 @@ begin
 
   Result := HashFilePackage[LowerCase(TextPackage)];
 end;
-
 
 end.

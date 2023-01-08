@@ -1,13 +1,19 @@
-unit UMake_Options;
-
+﻿unit UMake.Options;
 
 interface
 
-
+{$REGION '-> Global Uses Clause <-'}
 uses
-  UMake_Configuration,
-  Forms, FileCtrl, RegOpts;
+  { VCL }
+  Vcl.Forms,
+  Vcl.FileCtrl,
 
+  { UMake Libraries }
+  UMake.Configuration,
+
+  { Misc Libraries }
+  RegOpts;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TOptions
@@ -29,21 +35,29 @@ type
     RegOptEditor: TRegOptString;
     RegOptProjects: TRegOptString;
     Perform: array [TOptionsPerformIndex] of TOptionsPerform;
-
     constructor Create;
     destructor Destroy; override;
-
     procedure PerformAction(IndexPerform: TOptionsPerformIndex; Form: TCustomForm; Configuration: TConfiguration);
     procedure PerformEdit(Configuration: TConfiguration; TextFileError: string; IndexLineError: Integer);
   end;
 
-
 implementation
 
-
+{$REGION '-> Local Uses Clause <-'}
 uses
-  Registry, Windows, MMSystem, Shellapi, SysUtils, SysTools, RegExpr;
+  { RTL }
+  System.SysUtils,
+  System.Win.Registry,
 
+  { WinAPI }
+  Winapi.Windows,
+  Winapi.MMSystem,
+  Winapi.ShellAPI,
+
+  { Misc Libraries }
+  SysTools,
+  RegExpr;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TOptions
@@ -102,7 +116,6 @@ begin
   Registry.Free;
 end;
 
-
 destructor TOptions.Destroy;
 var
   IndexPerform: TOptionsPerformIndex;
@@ -121,7 +134,6 @@ begin
     end;
   end;
 end;
-
 
 procedure TOptions.PerformAction(IndexPerform: TOptionsPerformIndex; Form: TCustomForm; Configuration: TConfiguration);
 var
@@ -155,7 +167,6 @@ begin
   end;
 end;
 
-
 procedure TOptions.PerformEdit(Configuration: TConfiguration; TextFileError: string; IndexLineError: Integer);
 var
   TextCommand: string;
@@ -179,6 +190,5 @@ begin
     Application.MessageBox('No source code editor specified.', PChar(Application.Title), MB_ICONERROR)
   end;
 end;
-
 
 end.

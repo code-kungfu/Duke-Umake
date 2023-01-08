@@ -1,10 +1,12 @@
-unit UMake_FormOptions;
+﻿unit UMake.Forms.Options;
 
 
 interface
 
 
+{$REGION '-> Global Uses Clause <-'}
 uses
+  { VCL }
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -15,23 +17,31 @@ uses
   Vcl.CheckLst,
   Vcl.Buttons,
   Vcl.Menus,
+
+  { RTL }
   System.SysUtils,
   System.Classes,
+  System.Win.Registry,
+
+  { WinAPI }
   Winapi.Windows,
   Winapi.Messages,
   Winapi.ShellAPI,
-  System.Win.Registry,
-  UMake_Configuration,
-  UMake_Options,
-  SysTools;
 
+  { UMake Libraries }
+  UMake.Configuration,
+  UMake.Options,
+
+  { Misc Libraries }
+  SysTools;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TFormOptions
 (*****************************************************************************)
 
 type
-  TFormOptions = class(TForm)
+  TfrmOptions = class(TForm)
     BevelAboutAdditional: TBevel;
     BevelAboutUMake: TBevel;
     BevelDependencies: TBevel;
@@ -101,7 +111,6 @@ type
     TabSheetShortcuts: TTabSheet;
     Label1: TLabel;
     Label2: TLabel;
-
     procedure StaticTextMailAboutRegexpMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure StaticTextMailAboutRegexpMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure ButtonBrowseEditorClick(Sender: TObject);
@@ -128,33 +137,29 @@ type
     procedure ButtonShortcutExplorerClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure ButtonShortcutDesktopClick(Sender: TObject);
-
   public
     Configuration: TConfiguration;
     Options: TOptions;
-
   private
     OptionsPerform: array [TOptionsPerformIndex] of record
       Window: TOptionsPerformWindow;
       TextLaunch: string;
       TextSound: string;
     end;
-
     function GetIndexPerform: TOptionsPerformIndex;
   end;
 
-
 var
-  FormOptions: TFormOptions;
-
+  frmOptions: TfrmOptions;
 
 implementation
 
-uses UMake_FormShortcuts;
-
+{$REGION '-> Local Uses Clause <-'}
+uses
+  UMake.Forms.Shortcuts;
+{$ENDREGION}
 
 {$R *.DFM}
-
 
 (*****************************************************************************)
 (*  Global
@@ -166,12 +171,11 @@ begin
             (Y >= Rect.Top)  and (Y < Rect.Bottom);
 end;
 
-
 (*****************************************************************************)
 (*  TFormOptions
 (*****************************************************************************)
 
-procedure TFormOptions.FormShow(Sender: TObject);
+procedure TfrmOptions.FormShow(Sender: TObject);
 var
   IndexItem: Integer;
   IndexItemAdded: Integer;
@@ -233,15 +237,13 @@ begin
   PageControlPerform.ActivePage := TabSheetPerformSuccess;
 end;
 
-
-procedure TFormOptions.FormActivate(Sender: TObject);
+procedure TfrmOptions.FormActivate(Sender: TObject);
 begin
   PageControlPerformChange(PageControlPerform);
   PageControlChange(PageControl);
 end;
 
-
-procedure TFormOptions.StaticTextMailAboutRegexpMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TfrmOptions.StaticTextMailAboutRegexpMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   if IsInRect(X, Y, TStaticText(Sender).ClientRect) then
   begin
@@ -264,8 +266,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.StaticTextMailAboutRegexpMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfrmOptions.StaticTextMailAboutRegexpMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   TextTarget: string;
 begin
@@ -279,8 +280,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.ButtonBrowseEditorClick(Sender: TObject);
+procedure TfrmOptions.ButtonBrowseEditorClick(Sender: TObject);
 begin
   OpenDialogApplication.FileName := GetFirstParam(EditEditor.Text);
   OpenDialogApplication.InitialDir := ExtractFilePath(OpenDialogApplication.FileName);
@@ -292,8 +292,7 @@ begin
   EditEditor.SetFocus;
 end;
 
-
-procedure TFormOptions.ButtonPlaceholdersEditorClick(Sender: TObject);
+procedure TfrmOptions.ButtonPlaceholdersEditorClick(Sender: TObject);
 var
   PointPopup: TPoint;
 begin
@@ -301,7 +300,7 @@ begin
   PopupMenuPlaceholders.Popup(PointPopup.X, PointPopup.Y);
 end;
 
-procedure TFormOptions.MenuItemPlaceholderClick(Sender: TObject);
+procedure TfrmOptions.MenuItemPlaceholderClick(Sender: TObject);
 var
   TextPlaceholder: string;
 begin
@@ -320,8 +319,7 @@ begin
   EditEditor.SetFocus;
 end;
 
-
-procedure TFormOptions.PageControlChange(Sender: TObject);
+procedure TfrmOptions.PageControlChange(Sender: TObject);
 begin
   if PageControl.ActivePage = TabSheetProject then
   begin
@@ -340,24 +338,21 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.ButtonDependencyUpClick(Sender: TObject);
+procedure TfrmOptions.ButtonDependencyUpClick(Sender: TObject);
 begin
   if CheckListBoxDependencies.ItemIndex > 0 then
     CheckListBoxDependencies.Items.Exchange(CheckListBoxDependencies.ItemIndex, CheckListBoxDependencies.ItemIndex - 1);
   CheckListBoxDependenciesClick(CheckListBoxDependencies);
 end;
 
-
-procedure TFormOptions.ButtonDependencyDownClick(Sender: TObject);
+procedure TfrmOptions.ButtonDependencyDownClick(Sender: TObject);
 begin
   if CheckListBoxDependencies.ItemIndex < CheckListBoxDependencies.Items.Count - 1 then
     CheckListBoxDependencies.Items.Exchange(CheckListBoxDependencies.ItemIndex, CheckListBoxDependencies.ItemIndex + 1);
   CheckListBoxDependenciesClick(CheckListBoxDependencies);
 end;
 
-
-procedure TFormOptions.CheckListBoxDependenciesClick(Sender: TObject);
+procedure TfrmOptions.CheckListBoxDependenciesClick(Sender: TObject);
 var
   ControlFocused: TControl;
 begin
@@ -370,8 +365,7 @@ begin
     CheckListBoxDependencies.SetFocus;
 end;
 
-
-procedure TFormOptions.ButtonDependencySelectClick(Sender: TObject);
+procedure TfrmOptions.ButtonDependencySelectClick(Sender: TObject);
 var
   IndexFile: Integer;
   IndexItem: Integer;
@@ -402,8 +396,7 @@ begin
   CheckListBoxDependencies.SetFocus;
 end;
 
-
-procedure TFormOptions.ButtonBrowsePathsClick(Sender: TObject);
+procedure TfrmOptions.ButtonBrowsePathsClick(Sender: TObject);
 var
   IndexItem: Integer;
   TextPath: string;
@@ -425,16 +418,14 @@ begin
   CheckListBoxPaths.SetFocus;
 end;
 
-
-function TFormOptions.GetIndexPerform: TOptionsPerformindex;
+function TfrmOptions.GetIndexPerform: TOptionsPerformindex;
 begin
   if PageControlPerform.ActivePage = TabSheetPerformSuccess
     then Result := perfSuccess
     else Result := perfFailure;
 end;
 
-
-procedure TFormOptions.CheckBoxPerformWindowFrontClick(Sender: TObject);
+procedure TfrmOptions.CheckBoxPerformWindowFrontClick(Sender: TObject);
 begin
   if CheckBoxPerformWindowFront.Checked then
   begin
@@ -446,8 +437,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.CheckBoxPerformWindowCloseClick(Sender: TObject);
+procedure TfrmOptions.CheckBoxPerformWindowCloseClick(Sender: TObject);
 begin
   if CheckBoxPerformWindowClose.Checked then
   begin
@@ -459,8 +449,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.PageControlPerformChange(Sender: TObject);
+procedure TfrmOptions.PageControlPerformChange(Sender: TObject);
 begin
   with OptionsPerform[GetIndexPerform] do
   begin
@@ -483,22 +472,19 @@ begin
     CheckBoxPerformWindowFront.SetFocus;
 end;
 
-
-procedure TFormOptions.EditPerformLaunchChange(Sender: TObject);
+procedure TfrmOptions.EditPerformLaunchChange(Sender: TObject);
 begin
   OptionsPerform[GetIndexPerform].TextLaunch := EditPerformLaunch.Text;
   CheckBoxPerformLaunch.Checked := Length(Trim(EditPerformLaunch.Text)) > 0;
 end;
 
-
-procedure TFormOptions.EditPerformSoundChange(Sender: TObject);
+procedure TfrmOptions.EditPerformSoundChange(Sender: TObject);
 begin
   OptionsPerform[GetIndexPerform].TextSound := EditPerformSound.Text;
   CheckBoxPerformSound.Checked := Length(Trim(EditPerformSound.Text)) > 0;
 end;
 
-
-procedure TFormOptions.CheckBoxPerformLaunchClick(Sender: TObject);
+procedure TfrmOptions.CheckBoxPerformLaunchClick(Sender: TObject);
 begin
   if CheckBoxPerformLaunch.Checked then
   begin
@@ -513,8 +499,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.ButtonBrowsePerformLaunchClick(Sender: TObject);
+procedure TfrmOptions.ButtonBrowsePerformLaunchClick(Sender: TObject);
 begin
   OpenDialogApplication.FileName := GetFirstParam(EditPerformLaunch.Text);
   OpenDialogApplication.InitialDir := ExtractFilePath(OpenDialogApplication.FileName);
@@ -526,8 +511,7 @@ begin
   EditPerformLaunch.SetFocus;
 end;
 
-
-procedure TFormOptions.CheckBoxPerformSoundClick(Sender: TObject);
+procedure TfrmOptions.CheckBoxPerformSoundClick(Sender: TObject);
 begin
   if CheckBoxPerformSound.Checked then
   begin
@@ -542,8 +526,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.ButtonBrowsePerformSoundClick(Sender: TObject);
+procedure TfrmOptions.ButtonBrowsePerformSoundClick(Sender: TObject);
 begin
   OpenDialogSound.FileName := GetFirstParam(EditPerformSound.Text);
   OpenDialogSound.InitialDir := ExtractFilePath(OpenDialogSound.FileName);
@@ -555,8 +538,7 @@ begin
   EditPerformSound.SetFocus;
 end;
 
-
-procedure TFormOptions.ButtonShortcutDesktopClick(Sender: TObject);
+procedure TfrmOptions.ButtonShortcutDesktopClick(Sender: TObject);
 begin
   FormShortcuts.Left := Left + (Width  - FormShortcuts.Width)  div 2;
   FormShortcuts.Top  := Top  + (Height - FormShortcuts.Height) div 2;
@@ -566,8 +548,7 @@ begin
   PanelFocusShortcuts.SetFocus;
 end;
 
-
-procedure TFormOptions.ButtonShortcutExplorerClick(Sender: TObject);
+procedure TfrmOptions.ButtonShortcutExplorerClick(Sender: TObject);
 var
   Registry: TRegistry;
   TextKeyFile: string;
@@ -626,8 +607,7 @@ begin
   Registry.Free;
 end;
 
-
-procedure TFormOptions.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TfrmOptions.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   FlagFound: Boolean;
   IndexPath: Integer;
@@ -659,8 +639,7 @@ begin
   end;
 end;
 
-
-procedure TFormOptions.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfrmOptions.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   IndexPackage: Integer;
   IndexPath: Integer;
@@ -708,6 +687,5 @@ begin
     end;
   end;
 end;
-
 
 end.

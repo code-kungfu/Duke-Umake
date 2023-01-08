@@ -99,22 +99,22 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="src\UMake_Configuration.pas"/>
-        <DCCReference Include="src\UMake_Options.pas"/>
-        <DCCReference Include="src\forms\UMake_FormLaunch.pas">
-            <Form>FormLaunch</Form>
+        <DCCReference Include="src\UMake.Configuration.pas"/>
+        <DCCReference Include="src\UMake.Options.pas"/>
+        <DCCReference Include="src\forms\UMake.Forms.Launcher.pas">
+            <Form>frmLauncher</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\forms\UMake_FormMain.pas">
-            <Form>FormMain</Form>
+        <DCCReference Include="src\forms\UMake.Forms.Main.pas">
+            <Form>frmMainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\forms\UMake_FormOptions.pas">
-            <Form>FormOptions</Form>
+        <DCCReference Include="src\forms\UMake.Forms.Options.pas">
+            <Form>frmOptions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="src\forms\UMake_FormShortcuts.pas">
-            <Form>FormShortcuts</Form>
+        <DCCReference Include="src\forms\UMake.Forms.Shortcuts.pas">
+            <Form>frmShotcuts</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

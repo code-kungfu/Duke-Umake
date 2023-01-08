@@ -4,14 +4,14 @@ uses
   Vcl.Forms,
   Vcl.Controls,
   WinApi.Windows,
-  UMake_Configuration in 'src\UMake_Configuration.pas',
-  UMake_Options in 'src\UMake_Options.pas',
-  UMake_FormLaunch in 'src\forms\UMake_FormLaunch.pas' {FormLaunch},
-  UMake_FormMain in 'src\forms\UMake_FormMain.pas' {FormMain},
-  UMake_FormOptions in 'src\forms\UMake_FormOptions.pas' {FormOptions},
-  UMake_FormShortcuts in 'src\forms\UMake_FormShortcuts.pas' {FormShortcuts};
+  UMake.Configuration in 'src\UMake.Configuration.pas',
+  UMake.Options in 'src\UMake.Options.pas',
+  UMake.Forms.Launcher in 'src\forms\UMake.Forms.Launcher.pas' {frmLauncher},
+  UMake.Forms.Main in 'src\forms\UMake.Forms.Main.pas' {frmMainForm},
+  UMake.Forms.Options in 'src\forms\UMake.Forms.Options.pas' {frmOptions},
+  UMake.Forms.Shortcuts in 'src\forms\UMake.Forms.Shortcuts.pas' {frmShotcuts};
 
-{$R *.RES}
+R *.RES}
 {$R CursorHand.res}
 
 begin
@@ -22,13 +22,12 @@ begin
   Screen.Cursors[crHandPoint] := LoadCursor(HInstance, 'HANDCURSOR');
   Application.Initialize;
   Application.Title := 'UMake';
-  Application.CreateForm(TFormLaunch, FormLaunch);
-  Application.CreateForm(TFormMain, FormMain);
-  Application.CreateForm(TFormOptions, FormOptions);
-  Application.CreateForm(TFormMain, FormMain);
-  Application.CreateForm(TFormOptions, FormOptions);
-  Application.CreateForm(TFormShortcuts, FormShortcuts);
+  Application.CreateForm(TfrmLauncher, frmLauncher);
+  Application.CreateForm(TfrmMainForm, frmMainForm);
+  Application.CreateForm(TfrmOptions, frmOptions);
+  Application.CreateForm(TfrmMainForm, frmMainForm);
+  Application.CreateForm(TfrmShotcuts, frmShotcuts);
   Application.ShowMainForm := False;
-  FormMain.Startup;
+  frmMainForm.Startup;
   Application.Run;
 end.

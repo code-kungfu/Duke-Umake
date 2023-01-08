@@ -1,4 +1,4 @@
-object FormShortcuts: TFormShortcuts
+object frmShotcuts: TfrmShotcuts
   Left = 422
   Top = 296
   BorderStyle = bsDialog
@@ -174,7 +174,6 @@ object FormShortcuts: TFormShortcuts
       C0C0C0C0C0C0C0C0C0C0}
     TabOrder = 4
     OnClick = ButtonBrowseGameClick
-    ExplicitLeft = 328
   end
   object ButtonCreate: TButton
     Left = 136
@@ -187,8 +186,6 @@ object FormShortcuts: TFormShortcuts
     ModalResult = 1
     TabOrder = 5
     OnClick = ButtonCreateClick
-    ExplicitLeft = 132
-    ExplicitTop = 251
   end
   object ButtonCancel: TButton
     Left = 284
@@ -200,8 +197,6 @@ object FormShortcuts: TFormShortcuts
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 6
-    ExplicitLeft = 280
-    ExplicitTop = 251
   end
   object PanelFocus: TPanel
     Left = 0

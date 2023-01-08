@@ -1,10 +1,10 @@
-unit UMake_FormLaunch;
-
+﻿unit UMake.Forms.Launcher;
 
 interface
 
-
+{$REGION '-> Global Uses Clause <-'}
 uses
+  { VCL }
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -13,22 +13,30 @@ uses
   Vcl.Buttons,
   Vcl.ExtCtrls,
   Vcl.FileCtrl,
+
+  { RTL }
   System.SysUtils,
   System.Classes,
+
+  { WinAPI }
   Winapi.Windows,
   Winapi.Messages,
   Winapi.ShellAPI,
-  UMake_Configuration,
-  UMake_Options,
-  SysTools;
 
+  { UMake Libraries }
+  UMake.Configuration,
+  UMake.Options,
+
+  { Misc Libraries }
+  SysTools;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TFormLaunch
 (*****************************************************************************)
 
 type
-  TFormLaunch = class(TForm)
+  TfrmLauncher = class(TForm)
     BevelHints: TBevel;
     ButtonBrowseProject: TBitBtn;
     ButtonClose: TButton;
@@ -42,44 +50,40 @@ type
     Note1: TLabel;
     Note2: TLabel;
     Label1: TLabel;
-
     procedure ButtonBrowseProjectClick(Sender: TObject);
     procedure ButtonOptionsClick(Sender: TObject);
     procedure ComboBoxProjectChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-
   protected
     procedure MessageDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
-
   public
     Configuration: TConfiguration;
     Options: TOptions;
   end;
 
 var
-  FormLaunch: TFormLaunch;
+  frmLauncher: TfrmLauncher;
 
 implementation
 
+{$REGION '-> Local Uses Clause <-'}
 uses
-  UMake_FormOptions;
-
+  UMake.Forms.Options;
+{$ENDREGION}
 
 {$R *.DFM}
-
 
 (*****************************************************************************)
 (*  TFormLaunch
 (*****************************************************************************)
 
-procedure TFormLaunch.FormCreate(Sender: TObject);
+procedure TfrmLauncher.FormCreate(Sender: TObject);
 begin
   DragAcceptFiles(Handle, True);
 end;
 
-
-procedure TFormLaunch.FormShow(Sender: TObject);
+procedure TfrmLauncher.FormShow(Sender: TObject);
 var
   IndexProject: Integer;
 begin
@@ -90,8 +94,7 @@ begin
   ComboBoxProjectChange(ComboBoxProject);
 end;
 
-
-procedure TFormLaunch.MessageDropFiles(var Msg: TWMDropFiles);
+procedure TfrmLauncher.MessageDropFiles(var Msg: TWMDropFiles);
 var
   LengthTextFileDropped: Integer;
   TextFileDropped: string;
@@ -111,8 +114,7 @@ begin
   ComboBoxProject.SelectAll;
 end;
 
-
-procedure TFormLaunch.ButtonBrowseProjectClick(Sender: TObject);
+procedure TfrmLauncher.ButtonBrowseProjectClick(Sender: TObject);
 var
   TextDirPath: string;
 begin
@@ -130,8 +132,7 @@ begin
   ComboBoxProject.SetFocus;
 end;
 
-
-procedure TFormLaunch.ComboBoxProjectChange(Sender: TObject);
+procedure TfrmLauncher.ComboBoxProjectChange(Sender: TObject);
 var
   TextDirPackage: string;
 begin
@@ -155,13 +156,11 @@ begin
   ButtonCompile.Default := Assigned(Configuration);    
 end;
 
-
-procedure TFormLaunch.ButtonOptionsClick(Sender: TObject);
+procedure TfrmLauncher.ButtonOptionsClick(Sender: TObject);
 begin
   FormOptions.Configuration := Configuration;
   FormOptions.Options := Options;
   FormOptions.ShowModal;
 end;
-
 
 end.

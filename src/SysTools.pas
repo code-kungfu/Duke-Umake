@@ -1,11 +1,22 @@
-unit SysTools;
+﻿unit SysTools;
 
 
 interface
 
 
+{$REGION '-> Global Uses Clause <-'}
 uses
-  Windows, Shellapi, ShlObj, Registry, Messages, SysUtils, Classes;
+  { RTL }
+  System.SysUtils,
+  System.Classes,
+  System.Win.Registry,
+
+  { WinAPI }
+  Winapi.Windows,
+  Winapi.ShellAPI,
+  Winapi.ShlObj,
+  Winapi.Messages;
+{$ENDREGION}
 
 
 (*****************************************************************************)
@@ -130,6 +141,11 @@ type
 
 implementation
 
+{$REGION '-> Local Uses Clause <-'}
+uses
+  { RTL }
+  System.IOUtils;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  Imports
@@ -155,7 +171,7 @@ begin
 
   if not FlagLogCleared then
   begin
-    DeleteFile(TextFileLog);
+    TFile.Delete(TextFileLog);
     FlagLogCleared := True;
   end;
 
@@ -169,7 +185,6 @@ begin
     on Exception do;
   end;
 end;
-
 
 procedure ReadFiles(TextDirectory: string; TextFileMask: string; var TextFiles: TFileNames; var CountFiles: Integer);
 var
@@ -198,7 +213,6 @@ begin
     on Exception do;
   end;
 end;
-
 
 function BrowseFolder(HandleWindowParent: HWnd; TextTitle: string): string;
 var
@@ -381,7 +395,6 @@ begin
   end;
 end;
 
-
 function GetLongPath(TextPathShort: string): string;
 var
   IndexCharSeparator: Integer;
@@ -397,15 +410,15 @@ begin
       IndexCharSeparator := Length(TextPathShort);
 
     TextFileLong := Copy(TextPathShort, 1, IndexCharSeparator);
-    if Length(Result) = 0
-      then TextFileLong := UpperCase(TextFileLong)
-      else TextFileLong := '\' + GetLongFile(Result, TextFileLong);
+    if Length(Result) = 0 then
+      TextFileLong := UpperCase(TextFileLong)
+    else
+      TextFileLong := '\' + GetLongFile(Result, TextFileLong);
 
-    AppendStr(Result, TextFileLong);
+    AppendStr(AnsiString(Result), AnsiString(TextFileLong));
     Delete(TextPathShort, 1, IndexCharSeparator + 1);
   end;
 end;
-
 
 function GetFirstParam(TextLine: string): string;
 var

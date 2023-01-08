@@ -1,12 +1,17 @@
-unit RegOpts;
-
+﻿unit RegOpts;
 
 interface
 
-
+{$REGION '-> Global Uses Clause <-'}
 uses
-  Windows, Registry, SysUtils, Classes;
+  { RTL }
+  System.SysUtils,
+  System.Classes,
+  System.Win.Registry,
 
+  { WinAPI }
+  Winapi.Windows;
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TRegOpt
@@ -20,33 +25,26 @@ type
     FFlagLazy: Boolean;
     FTextNameProgram: string;
     FTextNameSetting: string;
-
     procedure UpdateItems(FlagSaveDirty: Boolean);
-
   protected
     FlagDirty: Boolean;
     FlagDirtyList: Boolean;
     ListRegOpt: TList;
-
     procedure LoadValue; virtual; abstract;
     procedure SaveValue; virtual; abstract;
-
   public
     constructor Create     (TextNameProgram: string; TextNameSetting: string; FlagLazy: Boolean = True);
     constructor CreateEmpty(TextNameProgram: string; TextNameSetting: string; FlagLazy: Boolean = True);
     constructor CreateList (TextNameProgram: string; TextNameSetting: string; FlagLazy: Boolean = True);
     destructor Destroy; override;
-
     procedure ItemAdd(CountItems: Integer = 1);
     procedure ItemInsert(IndexItem: Integer; CountItems: Integer = 1);
     procedure ItemDelete(IndexItem: Integer; CountItems: Integer = 1);
     function ItemCount: Integer;
-
     property Lazy: Boolean       read FFlagLazy;
     property NameProgram: string read FTextNameProgram;
     property NameSetting: string read FTextNameSetting;
   end;
-
 
 (*****************************************************************************)
 (*  TRegOptInteger
@@ -127,7 +125,6 @@ implementation
 var
   Reg: TRegistry;
   ListObjects: TList;
-
 
 constructor TRegOpt.Create(TextNameProgram: string; TextNameSetting: string; FlagLazy: Boolean = True);
 begin

@@ -1,10 +1,10 @@
-unit UMake_FormMain;
-
+﻿unit UMake.Forms.Main;
 
 interface
 
-
+{$REGION '-> Global Uses Clause <-'}
 uses
+  { VCL }
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -13,16 +13,24 @@ uses
   Vcl.ComCtrls,
   Vcl.ExtCtrls,
   Vcl.FileCtrl,
+
+  { RTL }
   System.SysUtils,
   System.Classes,
   System.Math,
+
+  { WinAPI }
   Winapi.Windows,
   Winapi.Messages,
-  UMake_Configuration,
-  UMake_Options,
+
+  { UMake Libraries }
+  UMake.Configuration,
+  UMake.Options,
+
+  { Misc Libraries }
   SysTools,
   RegExpr;
-
+{$ENDREGION}
 
 (*****************************************************************************)
 (*  TInfoError
@@ -52,7 +60,7 @@ type
 (*****************************************************************************)
 
 type
-  TFormMain = class(TForm)
+  TfrmMainForm = class(TForm)
     ButtonAbort: TButton;
     ButtonDetails: TButton;
     ButtonErrorEdit: TButton;
@@ -129,22 +137,22 @@ type
 
 
 var
-  FormMain: TFormMain;
+  frmMainForm: TfrmMainForm;
 
 
 implementation
 
-
+{$REGION '-> Local Uses Clause <-'}
 uses
-  UMake_FormOptions, UMake_FormLaunch;
-
+  { UMake Forms }
+  UMake.Forms.Options,
+  UMake.Forms.Launch;
+{$ENDREGION}
 
 const
   CRLF = #13#10;
 
-
 {$R *.DFM}
-
 
 (*****************************************************************************)
 (*  Global
@@ -247,7 +255,7 @@ end;
 (*  TFormMain
 (*****************************************************************************)
 
-procedure TFormMain.FormCreate(Sender: TObject);
+procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
   Options := TOptions.Create;
 
@@ -266,7 +274,7 @@ begin
 end;
 
 
-procedure TFormMain.Startup;
+procedure TfrmMainForm.Startup;
 var
   CountFiles: Integer;
   DateTimePackage: TDateTime;
@@ -513,13 +521,13 @@ begin
 end;
 
 
-procedure TFormMain.ErrorMessageBox(TextMessage: string; OptionsMessage: Integer);
+procedure TfrmMainForm.ErrorMessageBox(TextMessage: string; OptionsMessage: Integer);
 begin
   Application.MessageBox(PChar(TextMessage), PChar(Application.Title), OptionsMessage);
 end;
 
 
-procedure TFormMain.ErrorDetails(InfoError: TInfoError; LabelLocation: TLabel; RichEdit: TRichEdit);
+procedure TfrmMainForm.ErrorDetails(InfoError: TInfoError; LabelLocation: TLabel; RichEdit: TRichEdit);
 var
   IndexParagraph: Integer;
   RegExprParagraph: TRegExpr;
@@ -582,7 +590,7 @@ begin
 end;
 
 
-procedure TFormMain.FormShow(Sender: TObject);
+procedure TfrmMainForm.FormShow(Sender: TObject);
 var
   TextCommand: string;
   TextDirSystem: string;
@@ -664,13 +672,13 @@ begin
 end;
 
 
-procedure TFormMain.PipedProcessDebug(Sender: TObject; const DebugEvent: TDebugEvent; var ContinueStatus: Cardinal);
+procedure TfrmMainForm.PipedProcessDebug(Sender: TObject; const DebugEvent: TDebugEvent; var ContinueStatus: Cardinal);
 begin
   // nothing
 end;
 
 
-procedure TFormMain.PipedProcessOutput(Sender: TObject; const TextData: string; Pipe: TPipedOutput);
+procedure TfrmMainForm.PipedProcessOutput(Sender: TObject; const TextData: string; Pipe: TPipedOutput);
 
 
   function FormatError(TextType: string; InfoError: TInfoError): string;
@@ -823,7 +831,7 @@ begin
 end;
 
 
-procedure TFormMain.PipedProcessTerminate(Sender: TObject);
+procedure TfrmMainForm.PipedProcessTerminate(Sender: TObject);
 begin
   if not FileExists(TextFilePackageOriginal) and FileExists(TextFilePackageBackup) then
     RenameFile(TextFilePackageBackup, TextFilePackageOriginal);
@@ -886,7 +894,7 @@ begin
 end;
 
 
-procedure TFormMain.RichEditMessagesAppend(TextAppend: string; ColorAppend: TColor);
+procedure TfrmMainForm.RichEditMessagesAppend(TextAppend: string; ColorAppend: TColor);
 begin
   RichEditMessages.SelStart := $7fffffff;
   RichEditMessages.SelAttributes.Color := ColorAppend;
@@ -894,7 +902,7 @@ begin
 end;
 
 
-procedure TFormMain.UpdateDetailsError;
+procedure TfrmMainForm.UpdateDetailsError;
 begin
   ErrorDetails(InfoError, LabelErrorLocation, RichEditError);
 
@@ -903,7 +911,7 @@ begin
 end;
 
 
-procedure TFormMain.UpdateDetailsWarning;
+procedure TfrmMainForm.UpdateDetailsWarning;
 var
   ControlFocused: TControl;
 begin
@@ -923,7 +931,7 @@ begin
 end;
 
 
-procedure TFormMain.ButtonWarningPrevClick(Sender: TObject);
+procedure TfrmMainForm.ButtonWarningPrevClick(Sender: TObject);
 begin
   if IndexWarning > 0 then
   begin
@@ -933,7 +941,7 @@ begin
 end;
 
 
-procedure TFormMain.ButtonWarningNextClick(Sender: TObject);
+procedure TfrmMainForm.ButtonWarningNextClick(Sender: TObject);
 begin
   if IndexWarning < ListInfoWarning.Count - 1 then
   begin
@@ -943,7 +951,7 @@ begin
 end;
 
 
-procedure TFormMain.ButtonOptionsClick(Sender: TObject);
+procedure TfrmMainForm.ButtonOptionsClick(Sender: TObject);
 begin
   FormOptions.Configuration := Configuration;
   FormOptions.Options := Options;
@@ -953,13 +961,13 @@ begin
 end;
 
 
-procedure TFormMain.ButtonAbortClick(Sender: TObject);
+procedure TfrmMainForm.ButtonAbortClick(Sender: TObject);
 begin
   Close;
 end;
 
 
-procedure TFormMain.ButtonDetailsClick(Sender: TObject);
+procedure TfrmMainForm.ButtonDetailsClick(Sender: TObject);
 begin
   Constraints.MaxWidth  := 0;
   Constraints.MaxHeight := 0;
@@ -974,7 +982,7 @@ begin
 end;
 
 
-procedure TFormMain.ButtonErrorEditClick(Sender: TObject);
+procedure TfrmMainForm.ButtonErrorEditClick(Sender: TObject);
 begin
   Options.PerformEdit(Configuration, InfoError.TextFile, InfoError.IndexLine);
 
@@ -983,19 +991,19 @@ begin
 end;
 
 
-procedure TFormMain.TabSheetErrorResize(Sender: TObject);
+procedure TfrmMainForm.TabSheetErrorResize(Sender: TObject);
 begin
   RichEditError.Repaint;
 end;
 
 
-procedure TFormMain.TabSheetWarningsResize(Sender: TObject);
+procedure TfrmMainForm.TabSheetWarningsResize(Sender: TObject);
 begin
   RichEditWarning.Repaint;
 end;
 
 
-procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TfrmMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if Assigned(PipedProcess) and PipedProcess.Executing then
   begin
@@ -1013,7 +1021,7 @@ begin
 end;
 
 
-procedure TFormMain.FormDestroy(Sender: TObject);
+procedure TfrmMainForm.FormDestroy(Sender: TObject);
 begin
   Configuration.Free;
   Options.Free;

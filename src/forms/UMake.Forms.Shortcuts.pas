@@ -1,10 +1,12 @@
-unit UMake_FormShortcuts;
+﻿unit UMake.Forms.Shortcuts;
 
 
 interface
 
 
+{$REGION '-> Global Uses Clause <-'}
 uses
+  { VCL }
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -13,14 +15,21 @@ uses
   Vcl.Buttons,
   Vcl.ExtCtrls,
   Vcl.FileCtrl,
+
+  { RTL }
   System.SysUtils,
   System.Classes,
+  System.Win.Registry,
+
+  { WinAPI }
   Winapi.Windows,
   Winapi.Messages,
-  System.Win.Registry,
-  UMake_Configuration,
+
+  { UMake Libraries }
+  UMake.Configuration,
   SysTools,
   Shortcuts;
+{$ENDREGION}
 
 
 (*****************************************************************************)
@@ -28,7 +37,7 @@ uses
 (*****************************************************************************)
 
 type
-  TFormShortcuts = class(TForm)
+  TfrmShotcuts = class(TForm)
     BevelAuto: TBevel;
     BevelGeneric: TBevel;
     BevelProject: TBevel;
@@ -44,37 +53,30 @@ type
     RadioButtonAuto: TRadioButton;
     RadioButtonGeneric: TRadioButton;
     RadioButtonProject: TRadioButton;
-
     procedure FormShow(Sender: TObject);
     procedure ButtonBrowseGameClick(Sender: TObject);
     procedure ButtonCreateClick(Sender: TObject);
     procedure ComboBoxGameChange(Sender: TObject);
-
   public
     Configuration: TConfiguration;
-
   private
     procedure CreateShortcutGeneric;
     procedure CreateShortcutProject;
     procedure CreateShortcutAuto;
   end;
 
-
 var
-  FormShortcuts: TFormShortcuts;
-
+  frmShotcuts: TfrmShotcuts;
 
 implementation
 
-
 {$R *.DFM}
-
 
 (*****************************************************************************)
 (*  TFormShortcuts
 (*****************************************************************************)
 
-procedure TFormShortcuts.FormShow(Sender: TObject);
+procedure TfrmShotcuts.FormShow(Sender: TObject);
 var
   IndexKey: Integer;
   Registry: TRegistry;
@@ -132,8 +134,7 @@ begin
   end;
 end;
 
-
-procedure TFormShortcuts.ButtonBrowseGameClick(Sender: TObject);
+procedure TfrmShotcuts.ButtonBrowseGameClick(Sender: TObject);
 var
   TextDirGame: string;
 begin
@@ -144,21 +145,19 @@ begin
   ComboBoxGame.SetFocus;
 end;
 
-
-procedure TFormShortcuts.ComboBoxGameChange(Sender: TObject);
+procedure TfrmShotcuts.ComboBoxGameChange(Sender: TObject);
 begin
   RadioButtonAuto.Checked := True;
 end;
 
-procedure TFormShortcuts.ButtonCreateClick(Sender: TObject);
+procedure TfrmShotcuts.ButtonCreateClick(Sender: TObject);
 begin
        if RadioButtonGeneric.Checked then CreateShortcutGeneric
   else if RadioButtonProject.Checked then CreateShortcutProject
   else if RadioButtonAuto   .Checked then CreateShortcutAuto;
 end;
 
-
-procedure TFormShortcuts.CreateShortcutGeneric;
+procedure TfrmShotcuts.CreateShortcutGeneric;
 var
   ShortcutDesktop: TFileShortcut;
 begin
@@ -169,8 +168,7 @@ begin
   ShortcutDesktop.Free;
 end;
 
-
-procedure TFormShortcuts.CreateShortcutProject;
+procedure TfrmShotcuts.CreateShortcutProject;
 var
   ShortcutDesktop: TFileShortcut;
 begin
@@ -182,8 +180,7 @@ begin
   ShortcutDesktop.Free;
 end;
 
-
-procedure TFormShortcuts.CreateShortcutAuto;
+procedure TfrmShotcuts.CreateShortcutAuto;
 var
   ShortcutDesktop: TFileShortcut;
   TextDirGame: string;
@@ -208,6 +205,5 @@ begin
     ModalResult := mrNone;
   end;
 end;
-
 
 end.
