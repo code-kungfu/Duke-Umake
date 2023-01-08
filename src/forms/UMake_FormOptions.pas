@@ -5,10 +5,25 @@ interface
 
 
 uses
-  UMake_Configuration, UMake_Options,
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Shellapi, ExtCtrls, CheckLst, Buttons, Menus, SysTools,
-  Registry;
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.StdCtrls,
+  Vcl.ComCtrls,
+  Vcl.ExtCtrls,
+  Vcl.CheckLst,
+  Vcl.Buttons,
+  Vcl.Menus,
+  System.SysUtils,
+  System.Classes,
+  Winapi.Windows,
+  Winapi.Messages,
+  Winapi.ShellAPI,
+  System.Win.Registry,
+  UMake_Configuration,
+  UMake_Options,
+  SysTools;
 
 
 (*****************************************************************************)

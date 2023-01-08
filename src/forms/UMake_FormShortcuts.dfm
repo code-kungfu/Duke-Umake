@@ -11,14 +11,15 @@ object FormShortcuts: TFormShortcuts
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
+  DesignSize = (
+    377
+    285)
   TextHeight = 13
   object LabelExplanationGeneric: TLabel
     Left = 42
     Top = 36
-    Width = 311
+    Width = 307
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -26,11 +27,12 @@ object FormShortcuts: TFormShortcuts
       'This shortcut can act as a drop target for UnrealScript source f' +
       'iles or project directories.'
     WordWrap = True
+    ExplicitWidth = 311
   end
   object LabelExplanationProject: TLabel
     Left = 42
     Top = 104
-    Width = 311
+    Width = 307
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -38,6 +40,7 @@ object FormShortcuts: TFormShortcuts
       'Double-click this shortcut to directly compile the currently loa' +
       'ded project, Project.'
     WordWrap = True
+    ExplicitWidth = 311
   end
   object LabelProject: TLabel
     Left = 122
@@ -49,7 +52,7 @@ object FormShortcuts: TFormShortcuts
   object LabelExplanationAuto: TLabel
     Left = 42
     Top = 172
-    Width = 311
+    Width = 307
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -57,27 +60,31 @@ object FormShortcuts: TFormShortcuts
       'Double-click this shortcut to directly compile the most recently' +
       ' modified project in the following game directory:'
     WordWrap = True
+    ExplicitWidth = 311
   end
   object BevelGeneric: TBevel
     Left = 168
     Top = 20
-    Width = 193
+    Width = 189
     Height = 2
     Anchors = [akLeft, akTop, akRight]
+    ExplicitWidth = 193
   end
   object BevelProject: TBevel
     Left = 179
     Top = 88
-    Width = 182
+    Width = 178
     Height = 2
     Anchors = [akLeft, akTop, akRight]
+    ExplicitWidth = 182
   end
   object BevelAuto: TBevel
     Left = 208
     Top = 156
-    Width = 153
+    Width = 149
     Height = 2
     Anchors = [akLeft, akTop, akRight]
+    ExplicitWidth = 153
   end
   object RadioButtonGeneric: TRadioButton
     Left = 8
@@ -126,22 +133,19 @@ object FormShortcuts: TFormShortcuts
   object ComboBoxGame: TComboBox
     Left = 41
     Top = 210
-    Width = 288
+    Width = 284
     Height = 21
     Anchors = [akLeft, akTop, akRight]
-    ItemHeight = 13
     Sorted = True
     TabOrder = 3
     OnChange = ComboBoxGameChange
   end
   object ButtonBrowseGame: TBitBtn
-    Left = 336
+    Left = 332
     Top = 208
     Width = 25
     Height = 25
     Anchors = [akTop, akRight]
-    TabOrder = 4
-    OnClick = ButtonBrowseGameClick
     Glyph.Data = {
       06030000424D06030000000000003600000028000000100000000F0000000100
       180000000000D0020000120B0000120B00000000000000000000C0C0C0C0C0C0
@@ -168,9 +172,12 @@ object FormShortcuts: TFormShortcuts
       C0C0C0C0C0000000000000000000C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0
       C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0
       C0C0C0C0C0C0C0C0C0C0}
+    TabOrder = 4
+    OnClick = ButtonBrowseGameClick
+    ExplicitLeft = 328
   end
   object ButtonCreate: TButton
-    Left = 140
+    Left = 136
     Top = 252
     Width = 145
     Height = 25
@@ -180,9 +187,11 @@ object FormShortcuts: TFormShortcuts
     ModalResult = 1
     TabOrder = 5
     OnClick = ButtonCreateClick
+    ExplicitLeft = 132
+    ExplicitTop = 251
   end
   object ButtonCancel: TButton
-    Left = 288
+    Left = 284
     Top = 252
     Width = 81
     Height = 25
@@ -191,6 +200,8 @@ object FormShortcuts: TFormShortcuts
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 6
+    ExplicitLeft = 280
+    ExplicitTop = 251
   end
   object PanelFocus: TPanel
     Left = 0

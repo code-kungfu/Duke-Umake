@@ -5,9 +5,22 @@ interface
 
 
 uses
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.StdCtrls,
+  Vcl.Buttons,
+  Vcl.ExtCtrls,
+  Vcl.FileCtrl,
+  System.SysUtils,
+  System.Classes,
+  Winapi.Windows,
+  Winapi.Messages,
+  System.Win.Registry,
   UMake_Configuration,
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, SysTools, Shortcuts, Registry, ExtCtrls, FileCtrl;
+  SysTools,
+  Shortcuts;
 
 
 (*****************************************************************************)
