@@ -16,10 +16,10 @@ object frmShortcuts: TfrmShortcuts
     377
     298)
   TextHeight = 15
-  object LabelExplanationGeneric: TLabel
+  object lblExplanationGeneric: TLabel
     Left = 42
     Top = 36
-    Width = 299
+    Width = 295
     Height = 38
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -27,11 +27,12 @@ object frmShortcuts: TfrmShortcuts
       'This shortcut can act as a drop target for UnrealScript source f' +
       'iles or project directories.'
     WordWrap = True
+    ExplicitWidth = 299
   end
-  object LabelExplanationProject: TLabel
+  object lblExplanationProject: TLabel
     Left = 42
     Top = 104
-    Width = 299
+    Width = 295
     Height = 38
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -39,18 +40,19 @@ object frmShortcuts: TfrmShortcuts
       'Double-click this shortcut to directly compile the currently loa' +
       'ded project, Project.'
     WordWrap = True
+    ExplicitWidth = 299
   end
-  object LabelProject: TLabel
+  object lblProject: TLabel
     Left = 122
     Top = 81
     Width = 55
     Height = 15
     Caption = 'for Project'
   end
-  object LabelExplanationAuto: TLabel
+  object lblExplanationAuto: TLabel
     Left = 42
     Top = 172
-    Width = 299
+    Width = 295
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
@@ -58,11 +60,12 @@ object frmShortcuts: TfrmShortcuts
       'Double-click this shortcut to directly compile the most recently' +
       ' modified project in the following game directory:'
     WordWrap = True
+    ExplicitWidth = 299
   end
   object BevelGeneric: TBevel
     Left = 168
     Top = 20
-    Width = 181
+    Width = 177
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 193
@@ -70,7 +73,7 @@ object frmShortcuts: TfrmShortcuts
   object BevelProject: TBevel
     Left = 179
     Top = 88
-    Width = 170
+    Width = 166
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 182
@@ -78,7 +81,7 @@ object frmShortcuts: TfrmShortcuts
   object BevelAuto: TBevel
     Left = 208
     Top = 156
-    Width = 141
+    Width = 137
     Height = 2
     Anchors = [akLeft, akTop, akRight]
     ExplicitWidth = 153
@@ -130,15 +133,16 @@ object frmShortcuts: TfrmShortcuts
   object ComboBoxGame: TComboBox
     Left = 42
     Top = 227
-    Width = 276
+    Width = 272
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     Sorted = True
     TabOrder = 3
     OnChange = ComboBoxGameChange
+    ExplicitWidth = 268
   end
   object ButtonBrowseGame: TBitBtn
-    Left = 324
+    Left = 320
     Top = 226
     Width = 25
     Height = 25
@@ -171,9 +175,10 @@ object frmShortcuts: TfrmShortcuts
       C0C0C0C0C0C0C0C0C0C0}
     TabOrder = 4
     OnClick = ButtonBrowseGameClick
+    ExplicitLeft = 316
   end
   object ButtonCreate: TButton
-    Left = 128
+    Left = 124
     Top = 265
     Width = 145
     Height = 25
@@ -183,11 +188,11 @@ object frmShortcuts: TfrmShortcuts
     ModalResult = 1
     TabOrder = 5
     OnClick = ButtonCreateClick
-    ExplicitLeft = 124
-    ExplicitTop = 251
+    ExplicitLeft = 120
+    ExplicitTop = 264
   end
   object ButtonCancel: TButton
-    Left = 276
+    Left = 272
     Top = 265
     Width = 81
     Height = 25
@@ -196,8 +201,8 @@ object frmShortcuts: TfrmShortcuts
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 6
-    ExplicitLeft = 272
-    ExplicitTop = 251
+    ExplicitLeft = 268
+    ExplicitTop = 264
   end
   object PanelFocus: TPanel
     Left = 0

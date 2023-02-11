@@ -170,10 +170,12 @@ uses
 (*  Global
 (*****************************************************************************)
 
-function IsInRect(X, Y: Integer; Rect: TRect): Boolean;
+function IsInRect(const AX, AY: Integer; const ARect: TRect): Boolean;
 begin
-  Result := (X >= Rect.Left) and (X < Rect.Right) and
-            (Y >= Rect.Top)  and (Y < Rect.Bottom);
+  Result := (AX >= ARect.Left) and
+            (AX < ARect.Right) and
+            (AY >= ARect.Top)  and
+            (AY < ARect.Bottom);
 end;
 
 (*****************************************************************************)
@@ -182,10 +184,8 @@ end;
 
 procedure TfrmOptions.FormShow(Sender: TObject);
 var
-  IndexItem: Integer;
-  IndexItemAdded: Integer;
-  IndexPerform: TOptionsPerformIndex;
-  TextPath: string;
+  LIndexItemAdded: Integer;
+  LTextPath: string;
 begin
   if Assigned(Configuration) then
   begin
@@ -193,49 +193,51 @@ begin
     LabelProjectExplanation.Caption := Format('The options on this tab only affect the currently selected project, %s.', [Configuration.Package]);
 
     CheckListBoxDependencies.Clear;
-    for IndexItem := 0 to Configuration.StringListPackages.Count - 1 do
+    for var LIndexItem: Integer := 0 to Configuration.StringListPackages.Count - 1 do
     begin
-      if not AnsiSameText(Configuration.StringListPackages[IndexItem], Configuration.Package) then
+      if not SameText(Configuration.StringListPackages[LIndexItem], Configuration.Package) then
       begin
-        IndexItemAdded := CheckListBoxDependencies.Items.Add(Configuration.StringListPackages[IndexItem]);
-        CheckListBoxDependencies.Checked[IndexItemAdded] := True;
+        LIndexItemAdded := CheckListBoxDependencies.Items.Add(Configuration.StringListPackages[LIndexItem]);
+        CheckListBoxDependencies.Checked[LIndexItemAdded] := True;
       end;
     end;
 
     CheckListBoxDependenciesClick(CheckListBoxDependencies);
 
     CheckListBoxPaths.Clear;
-    for IndexItem := 0 to Configuration.StringListPaths.Count - 1 do
+    for var LIndexItem: Integer := 0 to Configuration.StringListPaths.Count - 1 do
     begin
-      TextPath := StringReplace(Configuration.StringListPaths[IndexItem], '/', '\', [rfReplaceAll]);
-      TextPath := GetAbsolutePath(TextPath, IncludeTrailingBackslash(Configuration.DirGame) + 'System\');
-      TextPath := GetRelativePath(TextPath, IncludeTrailingBackslash(Configuration.DirGame));
+      LTextPath := StringReplace(Configuration.StringListPaths[LIndexItem], '/', '\', [rfReplaceAll]);
+      LTextPath := GetAbsolutePath(LTextPath, IncludeTrailingBackslash(Configuration.DirGame) + 'System\');
+      LTextPath := GetRelativePath(LTextPath, IncludeTrailingBackslash(Configuration.DirGame));
 
-      IndexItemAdded := CheckListBoxPaths.Items.Add(TextPath);
-      CheckListBoxPaths.Checked[IndexItemAdded] := True;
+      LIndexItemAdded := CheckListBoxPaths.Items.Add(LTextPath);
+      CheckListBoxPaths.Checked[LIndexItemAdded] := True;
     end;
   end
-  else begin
+  else
+  begin
     TabSheetProject.TabVisible := False;
   end;
 
   EditEditor.Text := Options.RegOptEditor.Value;
   CheckBoxDetails.Checked := Options.RegOptDetails.Value;
 
-  for IndexPerform := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
+  for var LIndexPerform: TOptionsPerformIndex := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
   begin
-    OptionsPerform[IndexPerform].Window := TOptionsPerformWindow(Options.Perform[IndexPerform].RegOptWindow.Value);
-    OptionsPerform[IndexPerform].TextLaunch := Options.Perform[IndexPerform].RegOptLaunch.Value;
-    OptionsPerform[IndexPerform].TextSound  := Options.Perform[IndexPerform].RegOptSound .Value;
+    OptionsPerform[LIndexPerform].Window := TOptionsPerformWindow(Options.Perform[LIndexPerform].RegOptWindow.Value);
+    OptionsPerform[LIndexPerform].TextLaunch := Options.Perform[LIndexPerform].RegOptLaunch.Value;
+    OptionsPerform[LIndexPerform].TextSound := Options.Perform[LIndexPerform].RegOptSound .Value;
   end;
 
   if Assigned(Configuration) then
   begin
     OpenDialogPackage.InitialDir := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
-    OpenDialogPath   .InitialDir := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
+    OpenDialogPath.InitialDir := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
     PageControl.ActivePage := TabSheetProject;
   end
-  else begin
+  else
+  begin
     PageControl.ActivePage := TabSheetGeneral;
   end;
 
@@ -255,36 +257,29 @@ procedure TfrmOptions.StaticTextMailAboutRegexpMouseMove(Sender: TObject; Shift:
 begin
   if IsInRect(X, Y, TStaticText(Sender).ClientRect) then
   begin
-    with TStaticText(Sender).Font do
-    begin
-      Color := clBlue;
-      Style := Style + [fsUnderline];
-    end;
-
+    TStaticText(Sender).Font.Color := clBlue;
+    TStaticText(Sender).Font.Style := TStaticText(Sender).Font.Style + [fsUnderline];
     Mouse.Capture := TWinControl(Sender).Handle;
   end
-  else begin
-    with TStaticText(Sender).Font do
-    begin
-      Color := clWindowText;
-      Style := Style - [fsUnderline];
-    end;
-
+  else
+  begin
+    Color := clWindowText;
+    TStaticText(Sender).Font.Style := TStaticText(Sender).Font.Style - [fsUnderline];
     Mouse.Capture := 0;
   end;
 end;
 
 procedure TfrmOptions.StaticTextMailAboutRegexpMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
-  TextTarget: string;
+  LTextTarget: string;
 begin
   if IsInRect(X, Y, TStaticText(Sender).ClientRect) then
   begin
-    TextTarget := TStaticText(Sender).Caption;
-    if Pos(':', TextTarget) = 0 then
-      TextTarget := 'mailto:' + TextTarget;
+    LTextTarget := TStaticText(Sender).Caption;
+    if Pos(':', LTextTarget) = 0 then
+      LTextTarget := 'mailto:' + LTextTarget;
 
-    ShellExecute(Handle, nil, PChar(TextTarget), nil, nil, SW_SHOWNORMAL);
+    ShellExecute(Handle, nil, PChar(LTextTarget), nil, nil, SW_SHOWNORMAL);
   end;
 end;
 
@@ -302,28 +297,28 @@ end;
 
 procedure TfrmOptions.ButtonPlaceholdersEditorClick(Sender: TObject);
 var
-  PointPopup: TPoint;
+  LPointPopup: TPoint;
 begin
-  PointPopup := ButtonPlaceholdersEditor.ClientToScreen(Point(0, ButtonPlaceholdersEditor.Height));
-  PopupMenuPlaceholders.Popup(PointPopup.X, PointPopup.Y);
+  LPointPopup := ButtonPlaceholdersEditor.ClientToScreen(Point(0, ButtonPlaceholdersEditor.Height));
+  PopupMenuPlaceholders.Popup(LPointPopup.X, LPointPopup.Y);
 end;
 
 procedure TfrmOptions.MenuItemPlaceholderClick(Sender: TObject);
 var
-  TextPlaceholder: string;
+  LTextPlaceholder: string;
 begin
   case TMenuItem(Sender).Tag of
-    0:  TextPlaceholder := 'package';
-    1:  TextPlaceholder := 'errfile';
-    2:  TextPlaceholder := 'errline';
+    0: LTextPlaceholder := 'package';
+    1: LTextPlaceholder := 'errfile';
+    2: LTextPlaceholder := 'errline';
   end;
 
-  TextPlaceholder := '%' + TextPlaceholder + '%';
+  LTextPlaceholder := '%' + LTextPlaceholder + '%';
 
   if (EditEditor.SelStart >= 1) and (EditEditor.SelStart <= Length(EditEditor.Text)) and (EditEditor.Text[EditEditor.SelStart] <> ' ') then
-    TextPlaceholder := ' ' + TextPlaceholder;
+    LTextPlaceholder := ' ' + LTextPlaceholder;
 
-  EditEditor.SelText := TextPlaceholder;
+  EditEditor.SelText := LTextPlaceholder;
   EditEditor.SetFocus;
 end;
 
@@ -333,14 +328,14 @@ begin
   begin
     PanelFocusProject.SetFocus;
   end
-
-  else if PageControl.ActivePage = TabSheetGeneral then
+  else
+  if PageControl.ActivePage = TabSheetGeneral then
   begin
     EditEditor.SelStart := Length(EditEditor.Text);
     EditEditor.SetFocus;
   end
-
-  else if PageControl.ActivePage = TabSheetShortcuts then
+  else
+  if PageControl.ActivePage = TabSheetShortcuts then
   begin
     PanelFocusShortcuts.SetFocus;
   end;
@@ -350,6 +345,7 @@ procedure TfrmOptions.ButtonDependencyUpClick(Sender: TObject);
 begin
   if CheckListBoxDependencies.ItemIndex > 0 then
     CheckListBoxDependencies.Items.Exchange(CheckListBoxDependencies.ItemIndex, CheckListBoxDependencies.ItemIndex - 1);
+
   CheckListBoxDependenciesClick(CheckListBoxDependencies);
 end;
 
@@ -357,44 +353,46 @@ procedure TfrmOptions.ButtonDependencyDownClick(Sender: TObject);
 begin
   if CheckListBoxDependencies.ItemIndex < CheckListBoxDependencies.Items.Count - 1 then
     CheckListBoxDependencies.Items.Exchange(CheckListBoxDependencies.ItemIndex, CheckListBoxDependencies.ItemIndex + 1);
+
   CheckListBoxDependenciesClick(CheckListBoxDependencies);
 end;
 
 procedure TfrmOptions.CheckListBoxDependenciesClick(Sender: TObject);
 var
-  ControlFocused: TControl;
+  LControlFocused: TControl;
 begin
-  ControlFocused := ActiveControl;
+  LControlFocused := ActiveControl;
 
-  ButtonDependencyDown.Enabled := (CheckListBoxDependencies.ItemIndex >= 0) and (CheckListBoxDependencies.ItemIndex < CheckListBoxDependencies.Items.Count - 1);
-  ButtonDependencyUp  .Enabled :=  CheckListBoxDependencies.ItemIndex >  0;
+  ButtonDependencyDown.Enabled := (CheckListBoxDependencies.ItemIndex >= 0) and
+                                  (CheckListBoxDependencies.ItemIndex < CheckListBoxDependencies.Items.Count - 1);
 
-  if Assigned(ControlFocused) and not ControlFocused.Enabled then
+  ButtonDependencyUp.Enabled := CheckListBoxDependencies.ItemIndex >  0;
+
+  if Assigned(LControlFocused) and not LControlFocused.Enabled then
     CheckListBoxDependencies.SetFocus;
 end;
 
 procedure TfrmOptions.ButtonDependencySelectClick(Sender: TObject);
 var
-  IndexFile: Integer;
-  IndexItem: Integer;
-  TextNamePackage: string;
+  LIndexItem: Integer;
+  LTextNamePackage: string;
 begin
-  OpenDialogPackage.FileName := '';
+  OpenDialogPackage.FileName := string.Empty;
 
   if OpenDialogPackage.Execute then
   begin
     CheckListBoxDependencies.Items.BeginUpdate;
 
-    for IndexFile := 0 to OpenDialogPackage.Files.Count - 1 do
+    for var LIndexFile: Integer := 0 to OpenDialogPackage.Files.Count - 1 do
     begin
-      TextNamePackage := ExtractFileName(ChangeFileExt(OpenDialogPackage.Files[IndexFile], ''));
+      LTextNamePackage := ExtractFileName(ChangeFileExt(OpenDialogPackage.Files[LIndexFile], string.Empty));
 
-      IndexItem := CheckListBoxDependencies.Items.IndexOf(TextNamePackage);
-      if IndexItem < 0 then
-        IndexItem := CheckListBoxDependencies.Items.Add(TextNamePackage);
+      LIndexItem := CheckListBoxDependencies.Items.IndexOf(LTextNamePackage);
+      if LIndexItem < 0 then
+        LIndexItem := CheckListBoxDependencies.Items.Add(LTextNamePackage);
 
-      CheckListBoxDependencies.Checked[IndexItem] := True;
-      CheckListBoxDependencies.ItemIndex := IndexItem;
+      CheckListBoxDependencies.Checked[LIndexItem] := True;
+      CheckListBoxDependencies.ItemIndex := LIndexItem;
     end;
 
     CheckListBoxDependencies.Items.EndUpdate;
@@ -406,21 +404,21 @@ end;
 
 procedure TfrmOptions.ButtonBrowsePathsClick(Sender: TObject);
 var
-  IndexItem: Integer;
-  TextPath: string;
+  LIndexItem: Integer;
+  LTextPath: string;
 begin
   if OpenDialogPath.Execute then
   begin
-    TextPath := OpenDialogPath.FileName;
-    TextPath := ExtractFilePath(TextPath) + '*' + ExtractFileExt(TextPath);
-    TextPath := GetRelativePath(TextPath, IncludeTrailingBackslash(Configuration.DirGame));
+    LTextPath := OpenDialogPath.FileName;
+    LTextPath := ExtractFilePath(LTextPath) + '*' + ExtractFileExt(LTextPath);
+    LTextPath := GetRelativePath(LTextPath, IncludeTrailingBackslash(Configuration.DirGame));
 
-    IndexItem := CheckListBoxPaths.Items.IndexOf(TextPath);
-    if IndexItem < 0 then
-      IndexItem := CheckListBoxPaths.Items.Add(TextPath);
+    LIndexItem := CheckListBoxPaths.Items.IndexOf(LTextPath);
+    if LIndexItem < 0 then
+      LIndexItem := CheckListBoxPaths.Items.Add(LTextPath);
 
-    CheckListBoxPaths.Checked[IndexItem] := True;
-    CheckListBoxPaths.ItemIndex := IndexItem;
+    CheckListBoxPaths.Checked[LIndexItem] := True;
+    CheckListBoxPaths.ItemIndex := LIndexItem;
   end;
 
   CheckListBoxPaths.SetFocus;
@@ -428,9 +426,10 @@ end;
 
 function TfrmOptions.GetIndexPerform: TOptionsPerformindex;
 begin
-  if PageControlPerform.ActivePage = TabSheetPerformSuccess
-    then Result := perfSuccess
-    else Result := perfFailure;
+  if PageControlPerform.ActivePage = TabSheetPerformSuccess then
+    Result := perfSuccess
+  else
+    Result := perfFailure;
 end;
 
 procedure TfrmOptions.CheckBoxPerformWindowFrontClick(Sender: TObject);
@@ -440,7 +439,8 @@ begin
     CheckBoxPerformWindowClose.Checked := False;
     OptionsPerform[GetIndexPerform].Window := perfWindowFront;
   end
-  else begin
+  else
+  begin
     OptionsPerform[GetIndexPerform].Window := perfWindowNone;
   end;
 end;
@@ -452,29 +452,25 @@ begin
     CheckBoxPerformWindowFront.Checked := False;
     OptionsPerform[GetIndexPerform].Window := perfWindowClose;
   end
-  else begin
+  else
     OptionsPerform[GetIndexPerform].Window := perfWindowNone;
-  end;
 end;
 
 procedure TfrmOptions.PageControlPerformChange(Sender: TObject);
 begin
-  with OptionsPerform[GetIndexPerform] do
-  begin
-    case Window of
-      perfWindowNone:
-      begin
-        CheckBoxPerformWindowClose.Checked := False;
-        CheckBoxPerformWindowFront.Checked := False;
-      end;
-
-      perfWindowFront:  CheckBoxPerformWindowFront.Checked := True;
-      perfWindowClose:  CheckBoxPerformWindowClose.Checked := True;
+  case OptionsPerform[GetIndexPerform].Window of
+    perfWindowNone:
+    begin
+      CheckBoxPerformWindowClose.Checked := False;
+      CheckBoxPerformWindowFront.Checked := False;
     end;
 
-    EditPerformLaunch.Text := TextLaunch;
-    EditPerformSound .Text := TextSound;
+    perfWindowFront: CheckBoxPerformWindowFront.Checked := True;
+    perfWindowClose: CheckBoxPerformWindowClose.Checked := True;
   end;
+
+  EditPerformLaunch.Text := OptionsPerform[GetIndexPerform].TextLaunch;
+  EditPerformSound .Text := OptionsPerform[GetIndexPerform].TextSound;
 
   if PageControl.ActivePage = TabSheetGeneral then
     CheckBoxPerformWindowFront.SetFocus;
@@ -496,15 +492,14 @@ procedure TfrmOptions.CheckBoxPerformLaunchClick(Sender: TObject);
 begin
   if CheckBoxPerformLaunch.Checked then
   begin
-    if Length(Trim(EditPerformLaunch.Text)) = 0 then
+    if string(EditPerformLaunch.Text).Trim.Length = 0 then
     begin
       CheckBoxPerformLaunch.Checked := False;
       ButtonBrowsePerformLaunchClick(ButtonBrowsePerformLaunch);
     end;
   end
-  else begin
-    EditPerformLaunch.Text := '';
-  end;
+  else
+    EditPerformLaunch.Text := string.Empty;
 end;
 
 procedure TfrmOptions.ButtonBrowsePerformLaunchClick(Sender: TObject);
@@ -523,15 +518,14 @@ procedure TfrmOptions.CheckBoxPerformSoundClick(Sender: TObject);
 begin
   if CheckBoxPerformSound.Checked then
   begin
-    if Length(Trim(EditPerformSound.Text)) = 0 then
+    if string(EditPerformSound.Text).Trim.Length = 0 then
     begin
       CheckBoxPerformSound.Checked := False;
       ButtonBrowsePerformSoundClick(ButtonBrowsePerformSound);
     end;
   end
-  else begin
-    EditPerformSound.Text := '';
-  end;
+  else
+    EditPerformSound.Text := string.Empty;
 end;
 
 procedure TfrmOptions.ButtonBrowsePerformSoundClick(Sender: TObject);
@@ -548,99 +542,100 @@ end;
 
 procedure TfrmOptions.ButtonShortcutDesktopClick(Sender: TObject);
 begin
-  frmShortcuts.Left := Left + (Width  - frmShortcuts.Width)  div 2;
-  frmShortcuts.Top  := Top  + (Height - frmShortcuts.Height) div 2;
+  frmShortcuts.Left := Left + (Width - frmShortcuts.Width) div 2;
+  frmShortcuts.Top := Top + (Height - frmShortcuts.Height) div 2;
   frmShortcuts.Configuration := Configuration;
   frmShortcuts.ShowModal;
-
   PanelFocusShortcuts.SetFocus;
 end;
 
 procedure TfrmOptions.ButtonShortcutExplorerClick(Sender: TObject);
 var
-  Registry: TRegistry;
-  TextKeyFile: string;
+  LRegistry: TRegistry;
+  LTextKeyFile: string;
 begin
   PanelFocusShortcuts.SetFocus;
-
-  Registry := TRegistry.Create;
-  Registry.RootKey := HKEY_CLASSES_ROOT;
-
+  LRegistry := TRegistry.Create;
   try
-    TextKeyFile := '';
+    LRegistry.RootKey := HKEY_CLASSES_ROOT;
+    try
+      LTextKeyFile := string.Empty;
 
-    if Registry.OpenKey('\.uc', False) then
-    begin
-      TextKeyFile := Registry.ReadString('');
-      Registry.CloseKey;
+      if LRegistry.OpenKey('\.uc', False) then
+      begin
+        LTextKeyFile := LRegistry.ReadString(string.Empty);
+        LRegistry.CloseKey;
+      end;
+
+      if LTextKeyFile.Length = 0 then
+      begin
+        LTextKeyFile := 'UnrealScript';
+
+        if not LRegistry.OpenKey('\.uc', True) then
+          raise ERegistryException.Create('Unable to create file extension key');
+
+        LRegistry.WriteString(string.Empty, LTextKeyFile);
+        LRegistry.CloseKey;
+      end;
+
+      if not LRegistry.OpenKey(Format('\%s\shell\compile', [LTextKeyFile]), True) then
+        raise ERegistryException.Create('Unable to create "compile" command description');
+
+      LRegistry.WriteString(string.Empty, 'UMake Compile');
+      LRegistry.CloseKey;
+
+      if not LRegistry.OpenKey(Format('\%s\shell\compile\command', [LTextKeyFile]), True) then
+        raise ERegistryException.Create('Unable to create "compile" command');
+
+      LRegistry.WriteString(string.Empty, Format('%s "%%1"', [GetQuotedParam(GetLongPath(ParamStr(0)))]));
+      LRegistry.CloseKey;
+
+      if not LRegistry.OpenKey(Format('\%s\shell\setup', [LTextKeyFile]), True) then
+        raise ERegistryException.Create('Unable to create "compile" command description');
+
+      LRegistry.WriteString(string.Empty, 'UMake Project Setup');
+      LRegistry.CloseKey;
+
+      if not LRegistry.OpenKey(Format('\%s\shell\setup\command', [LTextKeyFile]), True) then
+        raise ERegistryException.Create('Unable to create "compile" command');
+
+      LRegistry.WriteString(string.Empty, Format('%s /setup "%%1"', [GetQuotedParam(GetLongPath(ParamStr(0)))]));
+      LRegistry.CloseKey;
+
+      MessageDlg('The Explorer right-click menu commands have been registered.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+    except
+      on ERegistryException do
+        MessageDlg('Unable to register Explorer commands. You might need administrator privileges to do this.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
     end;
-
-    if Length(TextKeyFile) = 0 then
-    begin
-      TextKeyFile := 'UnrealScript';
-
-      if not Registry.OpenKey('\.uc', True) then
-        raise ERegistryException.Create('Unable to create file extension key');
-      Registry.WriteString('', TextKeyFile);
-      Registry.CloseKey;
-    end;
-
-    if not Registry.OpenKey(Format('\%s\shell\compile', [TextKeyFile]), True) then
-      raise ERegistryException.Create('Unable to create "compile" command description');
-    Registry.WriteString('', 'UMake Compile');
-    Registry.CloseKey;
-
-    if not Registry.OpenKey(Format('\%s\shell\compile\command', [TextKeyFile]), True) then
-      raise ERegistryException.Create('Unable to create "compile" command');
-    Registry.WriteString('', Format('%s "%%1"', [GetQuotedParam(GetLongPath(ParamStr(0)))]));
-    Registry.CloseKey;
-
-    if not Registry.OpenKey(Format('\%s\shell\setup', [TextKeyFile]), True) then
-      raise ERegistryException.Create('Unable to create "compile" command description');
-    Registry.WriteString('', 'UMake Project Setup');
-    Registry.CloseKey;
-
-    if not Registry.OpenKey(Format('\%s\shell\setup\command', [TextKeyFile]), True) then
-      raise ERegistryException.Create('Unable to create "compile" command');
-    Registry.WriteString('', Format('%s /setup "%%1"', [GetQuotedParam(GetLongPath(ParamStr(0)))]));
-    Registry.CloseKey;
-
-    Application.MessageBox('The Explorer right-click menu commands have been registered.', PChar(Application.Title), MB_ICONINFORMATION);
-
-  except
-    on ERegistryException do
-      Application.MessageBox('Unable to register Explorer commands. You might need administrator privileges to do this.', PChar(Application.Title), MB_ICONERROR);
+  finally
+    LRegistry.Free;
   end;
-
-  Registry.Free;
 end;
 
 procedure TfrmOptions.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
-  FlagFound: Boolean;
-  IndexPath: Integer;
+  LFlagFound: Boolean;
 begin
   if ModalResult = mrOk then
   begin
     if TabSheetProject.TabVisible then
     begin
-      FlagFound := False;
+      LFlagFound := False;
 
-      for IndexPath := 0 to CheckListBoxPaths.Items.Count - 1 do
+      for var LIndexPath: Integer := 0 to CheckListBoxPaths.Items.Count - 1 do
       begin
-        if CheckListBoxPaths.Checked[IndexPath] and AnsiSameText(ExtractFileExt(CheckListBoxPaths.Items[IndexPath]), '.u') then
+        if CheckListBoxPaths.Checked[LIndexPath] and AnsiSameText(ExtractFileExt(CheckListBoxPaths.Items[LIndexPath]), '.u') then
         begin
-          FlagFound := True;
+          LFlagFound := True;
           Break;
         end;
       end;
 
-      if not FlagFound then
+      if not LFlagFound then
       begin
         PageControl.ActivePage := TabSheetProject;
         CheckListBoxPaths.SetFocus;
-
-        Application.MessageBox('UMake will not be able to compile your project unless you specify a search path for .u files.', PChar(Application.Title), MB_ICONERROR);  
+        MessageDlg('UMake will not be able to compile your project unless you specify a search path for .u files.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
         CanClose := False;
       end;
     end;
@@ -648,49 +643,42 @@ begin
 end;
 
 procedure TfrmOptions.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  IndexPackage: Integer;
-  IndexPath: Integer;
-  IndexPerform: TOptionsPerformIndex;
-  TextPath: string;
 begin
   if ModalResult = mrOk then
   begin
     Options.RegOptDetails.Value := CheckBoxDetails.Checked;
     Options.RegOptEditor.Value := EditEditor.Text;
 
-    for IndexPerform := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
+    for var LIndexPerform: TOptionsPerformIndex := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
     begin
-      with Options.Perform[IndexPerform] do
-      begin
-        RegOptWindow.Value := Integer(OptionsPerform[IndexPerform].Window);
-        RegOptLaunch.Value := OptionsPerform[IndexPerform].TextLaunch;
-        RegOptSound .Value := OptionsPerform[IndexPerform].TextSound;
-      end;
+      Options.Perform[LIndexPerform].RegOptWindow.Value := Integer(OptionsPerform[LIndexPerform].Window);
+      Options.Perform[LIndexPerform].RegOptLaunch.Value := OptionsPerform[LIndexPerform].TextLaunch;
+      Options.Perform[LIndexPerform].RegOptSound .Value := OptionsPerform[LIndexPerform].TextSound;
     end;
 
     if Assigned(Configuration) then
     begin
       Configuration.StringListPackages.Clear;
-      for IndexPackage := 0 to CheckListBoxDependencies.Items.Count - 1 do
-        if CheckListBoxDependencies.Checked[IndexPackage] then
-          Configuration.StringListPackages.Add(CheckListBoxDependencies.Items[IndexPackage]);
+      for var LIndexPackage: Integer := 0 to CheckListBoxDependencies.Items.Count - 1 do
+      begin
+        if CheckListBoxDependencies.Checked[LIndexPackage] then
+          Configuration.StringListPackages.Add(CheckListBoxDependencies.Items[LIndexPackage]);
+      end;
       Configuration.StringListPackages.Add(Configuration.Package);
 
       Configuration.StringListPaths.Clear;
-      for IndexPath := 0 to CheckListBoxPaths.Items.Count - 1 do
+      for var LIndexPath: Integer := 0 to CheckListBoxPaths.Items.Count - 1 do
       begin
-        if CheckListBoxPaths.Checked[IndexPath] then
+        if CheckListBoxPaths.Checked[LIndexPath] then
         begin
-          TextPath := CheckListBoxPaths.Items[IndexPath];
-          TextPath := GetAbsolutePath(TextPath, IncludeTrailingBackslash(Configuration.DirGame));
-          TextPath := GetRelativePath(TextPath, IncludeTrailingBackslash(Configuration.DirGame) + 'System\');
-          TextPath := StringReplace(TextPath, '\', '/', [rfReplaceAll]);
-
-          Configuration.StringListPaths.Add(TextPath);
+          var LTextPath: string;
+          LTextPath := CheckListBoxPaths.Items[LIndexPath];
+          LTextPath := GetAbsolutePath(LTextPath, IncludeTrailingBackslash(Configuration.DirGame));
+          LTextPath := GetRelativePath(LTextPath, IncludeTrailingBackslash(Configuration.DirGame) + 'System\');
+          LTextPath := StringReplace(LTextPath, '\', '/', [rfReplaceAll]);
+          Configuration.StringListPaths.Add(LTextPath);
         end;
       end;
-
       Configuration.Write;
     end;
   end;

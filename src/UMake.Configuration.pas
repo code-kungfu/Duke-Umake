@@ -22,22 +22,21 @@ uses
 
 type
   EConfiguration = class(Exception);
-
-  EConfigurationGameDirInvalid     = class(EConfiguration);
-  EConfigurationGameDirNotFound    = class(EConfiguration);
-  EConfigurationGameIniNotFound    = class(EConfiguration);
-  EConfigurationPackageDirInvalid  = class(EConfiguration);
+  EConfigurationGameDirInvalid = class(EConfiguration);
+  EConfigurationGameDirNotFound = class(EConfiguration);
+  EConfigurationGameIniNotFound = class(EConfiguration);
+  EConfigurationPackageDirInvalid = class(EConfiguration);
   EConfigurationPackageDirNotFound = class(EConfiguration);
 
   TConfiguration = class
   private
-    HashFilePackage: TStringHash;
-    TextDirCacheRecord: string;
-    TextDirGame: string;
-    TextDirPackage: string;
-    TextFileIniGame: string;
-    TextFileIniPackage: string;
-    TextNamePackage: string;
+    FHashFilePackage: TStringHash;
+    FTextDirCacheRecord: string;
+    FTextDirGame: string;
+    FTextDirPackage: string;
+    FTextFileIniGame: string;
+    FTextFileIniPackage: string;
+    FTextNamePackage: string;
     function FindIniGame: Boolean;
     function FindIniPackage: Boolean;
     procedure StringListPathsChange(Sender: TObject);
@@ -49,12 +48,15 @@ type
     procedure Read;
     procedure Write;
     function FindFilePackage(TextPackage: string): string;
-    property Package:    string read TextNamePackage;
-    property DirGame:    string read TextDirGame;
-    property DirPackage: string read TextDirPackage;
+    property Package: string read FTextNamePackage;
+    property DirGame: string read FTextDirGame;
+    property DirPackage: string read FTextDirPackage;
   end;
 
 implementation
+
+uses
+  System.IOUtils;
 
 (*****************************************************************************)
 (*  TConfiguration
@@ -62,23 +64,25 @@ implementation
 
 constructor TConfiguration.Create(ATextNamePackage: string; ATextDirGame: string);
 begin
-  TextNamePackage := ATextNamePackage;
-  TextDirGame     := ATextDirGame;
+  FTextNamePackage := ATextNamePackage;
+  FTextDirGame := ATextDirGame;
 
-  if not DirectoryExists(TextDirGame) then
+  if not TDirectory.Exists(FTextDirGame) then
     raise EConfigurationGameDirNotFound.Create('Game directory not found');
-  if not FileExists(IncludeTrailingBackslash(TextDirGame) + 'System\ucc.exe') then
+
+  if not TFile.Exists(TPath.Combine(FTextDirGame, 'System\ucc.exe')) then
     raise EConfigurationGameDirInvalid.Create('Game directory does not contain valid "System" subdirectory');
 
-  TextDirPackage := IncludeTrailingBackslash(TextDirGame) + TextNamePackage;
+  FTextDirPackage := IncludeTrailingBackslash(FTextDirGame) + FTextNamePackage;
 
-  if not DirectoryExists(TextDirPackage) then
+  if not TDirectory.Exists(FTextDirPackage) then
     raise EConfigurationPackageDirNotFound.Create('Package directory not found');
-  if not DirectoryExists(IncludeTrailingBackslash(TextDirPackage) + 'Classes') then
+
+  if not TDirectory.Exists(TPath.Combine(FTextDirPackage, 'Classes')) then
     raise EConfigurationPackageDirInvalid.Create('Package directory does not contain "Classes" subdirectory');
 
-  HashFilePackage    := TStringHash.Create;
-  StringListPaths    := TStringList.Create;
+  FHashFilePackage := TStringHash.Create;
+  StringListPaths := TStringList.Create;
   StringListPackages := TStringList.Create;
 
   StringListPaths.OnChange := StringListPathsChange;
@@ -86,7 +90,7 @@ end;
 
 destructor TConfiguration.Destroy;
 begin
-  HashFilePackage.Free;
+  FHashFilePackage.Free;
   StringListPaths.Free;
   StringListPackages.Free;
   inherited;
@@ -94,291 +98,296 @@ end;
 
 function TConfiguration.FindIniGame: Boolean;
 var
-  FileIni: TextFile;
-  TextFileIni: string;
-  TextLineIni: string;
-  ResultFind: Integer;
-  SearchRecIni: TSearchRec;
+  LFileIni: TextFile;
+  LTextFileIni: string;
+  LTextLineIni: string;
+  LResultFind: Integer;
+  LSearchRecIni: TSearchRec;
 begin
   Result := False;
-  ResultFind := FindFirst(IncludeTrailingBackslash(TextDirGame) + 'Players\UMake\*.ini', faAnyFile, SearchRecIni);
+  LResultFind := FindFirst(IncludeTrailingBackslash(FTextDirGame) + 'Players\UMake\*.ini', faAnyFile, LSearchRecIni);
 
-  while ResultFind = 0 do
+  while LResultFind = 0 do
   begin
-    if not AnsiSameText(SearchRecIni.Name, 'Default.ini') then
+    if not SameText(LSearchRecIni.Name, 'Default.ini') then
     begin
-      TextFileIni := IncludeTrailingBackslash(TextDirGame) + 'Players\UMake\' + SearchRecIni.Name;
+      LTextFileIni := IncludeTrailingBackslash(FTextDirGame) + 'Players\UMake\' + LSearchRecIni.Name;
 
       try
-        AssignFile(FileIni, TextFileIni);
-        Reset(FileIni);
-        Readln(FileIni, TextLineIni);
-        CloseFile(FileIni);
+        AssignFile(LFileIni, LTextFileIni);
+        Reset(LFileIni);
+        Readln(LFileIni, LTextLineIni);
+        CloseFile(LFileIni);
 
-        if AnsiSameText(TextLineIni, '[url]') then
+        if SameText(LTextLineIni, '[url]') then
         begin
           Result := True;
-          TextFileIniGame := TextFileIni;
+          FTextFileIniGame := LTextFileIni;
           Break;
         end;
-
       except
         on EInOutError do;
       end;
     end;
-
-    ResultFind := FindNext(SearchRecIni);
+    LResultFind := FindNext(LSearchRecIni);
   end;
 
-  FindClose(SearchRecIni);
+  FindClose(LSearchRecIni);
 end;
 
 function TConfiguration.FindIniPackage: Boolean;
 begin
-  TextFileIniPackage := IncludeTrailingBackslash(TextDirPackage) + 'make.ini';
-  Result := FileExists(TextFileIniPackage);
+  FTextFileIniPackage := TPath.Combine(FTextDirPackage, 'make.ini');
+  Result := TFile.Exists(FTextFileIniPackage);
 end;
 
 procedure TConfiguration.Read;
 var
-  FileIni: TextFile;
-  IndexCharSeparator: Integer;
-  TextLine: string;
-  TextLineName: string;
-  TextLineValue: string;
-  TextSection: string;
-
+  LFileIni: TextFile;
+  LIndexCharSeparator: Integer;
+  LTextLine: string;
+  LTextLineName: string;
+  LTextLineValue: string;
+  LTextSection: string;
 
   procedure ReadIni(TextFileIni: string);
   begin
     StringListPaths.Clear;
     StringListPackages.Clear;
 
-    AssignFile(FileIni, TextFileIni);
-    Reset(FileIni);
+    AssignFile(LFileIni, TextFileIni);
+    Reset(LFileIni);
 
-    while not Eof(FileIni) do
+    while not Eof(LFileIni) do
     begin
-      Readln(FileIni, TextLine);
-      TextLine := Trim(TextLine);
+      Readln(LFileIni, LTextLine);
+      LTextLine := LTextLine.Trim;
 
-      if (Length(TextLine) = 0) or (TextLine[1] = ';') then
+      if (LTextLine.Length = 0) or (LTextLine[1] = ';') then
         Continue;
 
-      if TextLine[1] = '[' then
+      if LTextLine[1] = '[' then
       begin
-        TextSection := Copy(TextLine, 2, Length(TextLine) - 2);
+        LTextSection := Copy(LTextLine, 2, Length(LTextLine) - 2);
       end
-      else begin
-        IndexCharSeparator := Pos('=', TextLine);
-        if IndexCharSeparator = 0 then
+      else
+      begin
+        LIndexCharSeparator := Pos('=', LTextLine);
+        if LIndexCharSeparator = 0 then
           Continue;
 
-        TextLineName := Copy(TextLine, 1, IndexCharSeparator - 1);
-        TextLineValue := Copy(TextLine, IndexCharSeparator + 1, Length(TextLine));
+        LTextLineName := Copy(LTextLine, 1, LIndexCharSeparator - 1);
+        LTextLineValue := Copy(LTextLine, LIndexCharSeparator + 1, Length(LTextLine));
 
-        if AnsiSameText(TextSection, 'Core.System') then
+        if SameText(LTextSection, 'Core.System') then
         begin
-          if AnsiSameText(TextLineName, 'Paths') then
-            StringListPaths.Add(TextLineValue);
-          if AnsiSameText(TextLineName, 'CacheRecordPath') then
-            TextDirCacheRecord := TextLineValue;
+          if SameText(LTextLineName, 'Paths') then
+            StringListPaths.Add(LTextLineValue);
+
+          if SameText(LTextLineName, 'CacheRecordPath') then
+            FTextDirCacheRecord := LTextLineValue;
         end
-
-        else if AnsiSameText(TextSection, 'Editor.EditorEngine') then
+        else
+        if SameText(LTextSection, 'Editor.EditorEngine') then
         begin
-          if AnsiSameText(TextLineName, 'EditPackages') then
-            StringListPackages.Add(TextLineValue);
+          if SameText(LTextLineName, 'EditPackages') then
+            StringListPackages.Add(LTextLineValue);
         end;
       end;
     end;
 
-    CloseFile(FileIni);
+    CloseFile(LFileIni);
   end;
 
 var
-  FlagFound: Boolean;
-  IndexPackage: Integer;
+  LFlagFound: Boolean;
 begin
   if not FindIniGame then
     raise EConfigurationGameIniNotFound.Create('Game configuration file not found');
-  ReadIni(TextFileIniGame);
+
+  ReadIni(FTextFileIniGame);
 
   if FindIniPackage then
-    ReadIni(TextFileIniPackage);
+    ReadIni(FTextFileIniPackage);
 
-  FlagFound := False;
-  for IndexPackage := 0 to StringListPackages.Count - 1 do
+  LFlagFound := False;
+  for var LIndexPackage: Integer := 0 to StringListPackages.Count - 1 do
   begin
-    if AnsiSameText(StringListPackages[IndexPackage], TextNamePackage) then
+    if SameText(StringListPackages[LIndexPackage], FTextNamePackage) then
     begin
-      FlagFound := True;
+      LFlagFound := True;
       Break;
     end;
   end;
 
-  if not FlagFound then
-    StringListPackages.Add(TextNamePackage);
+  if not LFlagFound then
+    StringListPackages.Add(FTextNamePackage);
 end;
 
 procedure TConfiguration.Write;
 var
-  StringListIni: TStringList;
+  LStringListIni: TStringList;
 
-
-  procedure InsertSettings(TextSection: string; TextName: string; StringListSettings: TStringList);
+  procedure InsertSettings(ATextSection, ATextName: string; AStringListSettings: TStringList);
   var
-    IndexLine: Integer;
-    IndexLineSection: Integer;
-    IndexLineSetting: Integer;
-    IndexSetting: Integer;
-    TextLine: string;
+    LIndexLine: Integer;
+    LIndexLineSection: Integer;
+    LIndexLineSetting: Integer;
+    LTextLine: string;
   begin
-    TextSection := '[' + TextSection + ']';
-    TextName := TextName + '=';
+    ATextSection := '[' + ATextSection + ']';
+    ATextName := ATextName + '=';
 
-    IndexLineSection := 0;
-    while (IndexLineSection < StringListIni.Count) and not AnsiSameText(Trim(StringListIni[IndexLineSection]), TextSection) do
-      Inc(IndexLineSection);
+    LIndexLineSection := 0;
+    while (LIndexLineSection < LStringListIni.Count) and not SameText(Trim(LStringListIni[LIndexLineSection]), ATextSection) do
+      Inc(LIndexLineSection);
 
-    if IndexLineSection < StringListIni.Count then
+    if LIndexLineSection < LStringListIni.Count then
     begin
-      IndexLineSetting := -1;
-      IndexLine := IndexLineSection + 1;
+      LIndexLineSetting := -1;
+      LIndexLine := LIndexLineSection + 1;
 
-      while IndexLine < StringListIni.Count do
+      while LIndexLine < LStringListIni.Count do
       begin
-        TextLine := Trim(StringListIni[IndexLine]);
+        LTextLine := Trim(LStringListIni[LIndexLine]);
 
-        if (Length(TextLine) > 0) and (TextLine[1] = '[') then
+        if (Length(LTextLine) > 0) and (LTextLine[1] = '[') then
         begin
           Break;
         end
-
-        else if AnsiSameText(Copy(TextLine, 1, Length(TextName)), TextName) then
+        else
+        if SameText(Copy(LTextLine, 1, Length(ATextName)), ATextName) then
         begin
-          if IndexLineSetting < 0 then
-            IndexLineSetting := IndexLine;
-          StringListIni.Delete(IndexLine);
-        end
+          if LIndexLineSetting < 0 then
+            LIndexLineSetting := LIndexLine;
 
-        else begin
-          Inc(IndexLine);
+          LStringListIni.Delete(LIndexLine);
+        end
+        else
+        begin
+          Inc(LIndexLine);
         end;
       end;
 
-      if IndexLineSetting < 0 then
+      if LIndexLineSetting < 0 then
       begin
-        IndexLineSetting := IndexLine;
-        while Length(Trim(StringListIni[IndexLineSetting - 1])) = 0 do
-          Dec(IndexLineSetting);
+        LIndexLineSetting := LIndexLine;
+        while Length(Trim(LStringListIni[LIndexLineSetting - 1])) = 0 do
+          Dec(LIndexLineSetting);
       end;
 
-      for IndexSetting := StringListSettings.Count - 1 downto 0 do
-        StringListIni.Insert(IndexLineSetting, TextName + StringListSettings[IndexSetting]);
-    end
-    else begin
-      StringListIni.Add('');
-      StringListIni.Add(TextSection);
+      for var LIndexSetting: Integer := AStringListSettings.Count - 1 downto 0 do
+        LStringListIni.Insert(LIndexLineSetting, ATextName + AStringListSettings[LIndexSetting]);
 
-      for IndexSetting := 0 to StringListSettings.Count - 1 do
-        StringListIni.Add(TextName + StringListSettings[IndexSetting]);
+    end
+    else
+    begin
+      LStringListIni.Add(string.Empty);
+      LStringListIni.Add(ATextSection);
+
+      for var LIndexSetting: Integer := 0 to AStringListSettings.Count - 1 do
+        LStringListIni.Add(ATextName + AStringListSettings[LIndexSetting]);
     end;
   end;
 
-  procedure InsertSetting(TextSection: string; TextName: string; TextSetting: string);
+  procedure InsertSetting(ATextSection, ATextName, ATextSetting: string);
   var
-    StringListSetting: TStringList;
+    LStringListSetting: TStringList;
   begin
-    StringListSetting := TStringList.Create;
-    StringListSetting.Add(TextSetting);
-    InsertSettings(TextSection, TextName, StringListSetting);
-    StringListSetting.Free;
+    LStringListSetting := TStringList.Create;
+    try
+      LStringListSetting.Add(ATextSetting);
+      InsertSettings(ATextSection, ATextName, LStringListSetting);
+    finally
+      LStringListSetting.Free;
+    end;
   end;
-
 
 var
-  FlagChanged: Boolean;
-  IndexLine: Integer;
-  StringListIniOriginal: TStringList;
+  LFlagChanged: Boolean;
+  LStringListIniOriginal: TStringList;
 begin
-  StringListIni         := TStringList.Create;
-  StringListIniOriginal := TStringList.Create;
-
-  FindIniPackage;
-  if FileExists(TextFileIniPackage) then
-  begin
-    StringListIni.LoadFromFile(TextFileIniPackage);
-    StringListIniOriginal.Assign(StringListIni);
-  end
-  else begin
-    StringListIni.Add('; Generated by UMake');
-    StringListIni.Add('');
-    StringListIni.Add('[Engine.Engine]');
-    StringListIni.Add('EditorEngine=Editor.EditorEngine');
-    StringListIni.Add('');
-    StringListIni.Add('[Editor.EditorEngine]');
-    StringListIni.Add('CacheSizeMegs=32');
-  end;
-
-  InsertSettings('Core.System',         'Paths',           StringListPaths);
-  InsertSettings('Editor.EditorEngine', 'EditPackages',    StringListPackages);
-
-  if Length(TextDirCacheRecord) > 0 then
-    InsertSetting ('Core.System', 'CacheRecordPath', TextDirCacheRecord);
-
-  if StringListIni.Count <> StringListIniOriginal.Count then
-  begin
-    FlagChanged := True;
-  end
-  else begin
-    FlagChanged := False;
-    for IndexLine := 0 to StringListIni.Count - 1 do
+  LStringListIni := TStringList.Create;
+  LStringListIniOriginal := TStringList.Create;
+  try
+    FindIniPackage;
+    if TFile.Exists(FTextFileIniPackage) then
     begin
-      if not AnsiSameText(StringListIni[IndexLine], StringListIniOriginal[IndexLine]) then
+      LStringListIni.LoadFromFile(FTextFileIniPackage);
+      LStringListIniOriginal.Assign(LStringListIni);
+    end
+    else
+    begin
+      LStringListIni.Add('; Generated by UMake');
+      LStringListIni.Add(string.Empty);
+      LStringListIni.Add('[Engine.Engine]');
+      LStringListIni.Add('EditorEngine=Editor.EditorEngine');
+      LStringListIni.Add(string.Empty);
+      LStringListIni.Add('[Editor.EditorEngine]');
+      LStringListIni.Add('CacheSizeMegs=32');
+    end;
+
+    InsertSettings('Core.System', 'Paths', StringListPaths);
+    InsertSettings('Editor.EditorEngine', 'EditPackages', StringListPackages);
+
+    if Length(FTextDirCacheRecord) > 0 then
+      InsertSetting ('Core.System', 'CacheRecordPath', FTextDirCacheRecord);
+
+    if LStringListIni.Count <> LStringListIniOriginal.Count then
+    begin
+      LFlagChanged := True;
+    end
+    else
+    begin
+      LFlagChanged := False;
+      for var LIndexLine: Integer := 0 to LStringListIni.Count - 1 do
       begin
-        FlagChanged := True;
-        Break;
+        if not SameText(LStringListIni[LIndexLine], LStringListIniOriginal[LIndexLine]) then
+        begin
+          LFlagChanged := True;
+          Break;
+        end;
       end;
     end;
+
+    if LFlagChanged then
+      LStringListIni.SaveToFile(FTextFileIniPackage);
+
+  finally
+    LStringListIniOriginal.Free;
+    LStringListIni.Free;
   end;
-
-  if FlagChanged then
-    StringListIni.SaveToFile(TextFileIniPackage);
-
-  StringListIni.Free;
 end;
 
 procedure TConfiguration.StringListPathsChange(Sender: TObject);
 begin
-  HashFilePackage.Clear;
+  FHashFilePackage.Clear;
 end;
 
 function TConfiguration.FindFilePackage(TextPackage: string): string;
 var
-  IndexPath: Integer;
-  TextFilePackage: string;
+  LTextFilePackage: string;
 begin
-  if not HashFilePackage.Exists(LowerCase(TextPackage)) then
+  if not FHashFilePackage.Exists(LowerCase(TextPackage)) then
   begin
-    for IndexPath := 0 to StringListPaths.Count - 1 do
+    for var LIndexPath: Integer := 0 to StringListPaths.Count - 1 do
     begin
-      TextFilePackage := StringReplace(StringListPaths[IndexPath], '/', '\', [rfReplaceAll]);
-      TextFilePackage := GetAbsolutePath(TextFilePackage, IncludeTrailingBackslash(TextDirGame) + 'System\');
-      TextFilePackage := StringReplace(TextFilePackage, '*', TextPackage, [rfReplaceAll]);
+      LTextFilePackage := StringReplace(StringListPaths[LIndexPath], '/', '\', [rfReplaceAll]);
+      LTextFilePackage := GetAbsolutePath(LTextFilePackage, IncludeTrailingBackslash(FTextDirGame) + 'System\');
+      LTextFilePackage := StringReplace(LTextFilePackage, '*', TextPackage, [rfReplaceAll]);
 
-      if FileExists(TextFilePackage) then
+      if TFile.Exists(LTextFilePackage) then
       begin
-        HashFilePackage[LowerCase(TextPackage)] := TextFilePackage;
+        FHashFilePackage[LowerCase(TextPackage)] := LTextFilePackage;
         Break;
       end;
     end;
 
-    if not HashFilePackage.Exists(LowerCase(TextPackage)) then
-      HashFilePackage[LowerCase(TextPackage)] := '';
+    if not FHashFilePackage.Exists(LowerCase(TextPackage)) then
+      FHashFilePackage[LowerCase(TextPackage)] := string.Empty;
   end;
 
-  Result := HashFilePackage[LowerCase(TextPackage)];
+  Result := FHashFilePackage[LowerCase(TextPackage)];
 end;
 
 end.

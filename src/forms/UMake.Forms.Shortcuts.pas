@@ -45,10 +45,10 @@ type
     ButtonCancel: TButton;
     ButtonCreate: TButton;
     ComboBoxGame: TComboBox;
-    LabelExplanationAuto: TLabel;
-    LabelExplanationGeneric: TLabel;
-    LabelExplanationProject: TLabel;
-    LabelProject: TLabel;
+    lblExplanationAuto: TLabel;
+    lblExplanationGeneric: TLabel;
+    lblExplanationProject: TLabel;
+    lblProject: TLabel;
     PanelFocus: TPanel;
     RadioButtonAuto: TRadioButton;
     RadioButtonGeneric: TRadioButton;
@@ -57,18 +57,21 @@ type
     procedure ButtonBrowseGameClick(Sender: TObject);
     procedure ButtonCreateClick(Sender: TObject);
     procedure ComboBoxGameChange(Sender: TObject);
-  public
-    Configuration: TConfiguration;
   private
     procedure CreateShortcutGeneric;
     procedure CreateShortcutProject;
     procedure CreateShortcutAuto;
+  public
+    Configuration: TConfiguration;
   end;
 
 var
   frmShortcuts: TfrmShortcuts;
 
 implementation
+
+uses
+  System.IOUtils, System.UITypes;
 
 {$R *.DFM}
 
@@ -78,69 +81,72 @@ implementation
 
 procedure TfrmShortcuts.FormShow(Sender: TObject);
 var
-  IndexKey: Integer;
-  Registry: TRegistry;
-  StringListKeys: TStringList;
-  TextDirGame: string;
+  LRegistry: TRegistry;
+  LStringListKeys: TStringList;
+  LTextDirGame: string;
 begin
   PanelFocus.SetFocus;
   RadioButtonGeneric.Checked := True;
 
-  Registry := TRegistry.Create;
-  Registry.RootKey := HKEY_LOCAL_MACHINE;
-
-  if Registry.OpenKeyReadOnly('\SOFTWARE\Unreal Technology\Installed Apps') then
-  begin
-    StringListKeys := TStringList.Create;
-    Registry.GetKeyNames(StringListKeys);
-    Registry.CloseKey;
-
-    for IndexKey := 0 to StringListKeys.Count - 1 do
+  LRegistry := TRegistry.Create;
+  try
+    LRegistry.RootKey := HKEY_LOCAL_MACHINE;
+    if LRegistry.OpenKeyReadOnly('\SOFTWARE\Unreal Technology\Installed Apps') then
     begin
-      if Registry.OpenKeyReadOnly('\SOFTWARE\Unreal Technology\Installed Apps\' + StringListKeys[IndexKey]) then
-      begin
-        if Registry.ValueExists('Folder') then
+      LStringListKeys := TStringList.Create;
+      try
+        LRegistry.GetKeyNames(LStringListKeys);
+        LRegistry.CloseKey;
+
+        for var LIndexKey: Integer := 0 to LStringListKeys.Count - 1 do
         begin
-          TextDirGame := Registry.ReadString('Folder');
-          TextDirGame := GetLongPath(TextDirGame);
-          if FileExists(IncludeTrailingBackslash(TextDirGame) + 'System\ucc.exe') and (ComboBoxGame.Items.IndexOf(TextDirGame) < 0) then
-            ComboBoxGame.Items.Add(ExcludeTrailingBackslash(TextDirGame));
+          if LRegistry.OpenKeyReadOnly('\SOFTWARE\Unreal Technology\Installed Apps\' + LStringListKeys[LIndexKey]) then
+          begin
+            if LRegistry.ValueExists('Folder') then
+            begin
+              LTextDirGame := LRegistry.ReadString('Folder');
+              LTextDirGame := GetLongPath(LTextDirGame);
+              if FileExists(IncludeTrailingBackslash(LTextDirGame) + 'System\ucc.exe') and (ComboBoxGame.Items.IndexOf(LTextDirGame) < 0) then
+                ComboBoxGame.Items.Add(ExcludeTrailingBackslash(LTextDirGame));
+            end;
+            LRegistry.CloseKey;
+          end;
         end;
-        Registry.CloseKey;
+
+        if ComboBoxGame.Items.Count > 0 then
+          ComboBoxGame.Text := ComboBoxGame.Items[0];
+
+      finally
+        LStringListKeys.Free;
       end;
     end;
-
-    if ComboBoxGame.Items.Count > 0 then
-      ComboBoxGame.Text := ComboBoxGame.Items[0];
-
-    StringListKeys.Free;
+  finally
+    LRegistry.Free;
   end;
-
-  Registry.Free;
 
   if Assigned(Configuration) then
   begin
-    LabelProject.Caption := Format('for %s', [Configuration.Package]);
-    LabelExplanationProject.Caption := Format('Double-click this shortcut to directly compile the currently loaded project, %s.', [Configuration.Package]);
-    BevelProject.SetBounds(LabelProject.Left + LabelProject.Width + 5, BevelProject.Top, BevelProject.Left + BevelProject.Width - LabelProject.Left - LabelProject.Width - 5, BevelProject.Height);
+    lblProject.Caption := Format('for %s', [Configuration.Package]);
+    lblExplanationProject.Caption := Format('Double-click this shortcut to directly compile the currently loaded project, %s.', [Configuration.Package]);
+    BevelProject.SetBounds(lblProject.Left + lblProject.Width + 5, BevelProject.Top, BevelProject.Left + BevelProject.Width - lblProject.Left - lblProject.Width - 5, BevelProject.Height);
     ComboBoxGame.Text := ExcludeTrailingBackslash(Configuration.DirGame);
   end
-  else begin
+  else
+  begin
     RadioButtonProject.Enabled := False;
-    LabelProject.Hide;
-    LabelExplanationProject.Enabled := False;
-    LabelExplanationProject.Caption := 'Load a project first to enable this option.';
-    BevelProject.SetBounds(LabelProject.Left + 2, BevelProject.Top, BevelProject.Left + BevelProject.Width - LabelProject.Left - 2, BevelProject.Height);
+    lblProject.Hide;
+    lblExplanationProject.Enabled := False;
+    lblExplanationProject.Caption := 'Load a project first to enable this option.';
+    BevelProject.SetBounds(lblProject.Left + 2, BevelProject.Top, BevelProject.Left + BevelProject.Width - lblProject.Left - 2, BevelProject.Height);
   end;
 end;
 
 procedure TfrmShortcuts.ButtonBrowseGameClick(Sender: TObject);
 var
-  TextDirGame: string;
+  LTextDirGame: string;
 begin
-  TextDirGame := BrowseFolder(Handle, 'Select the base directory of the game UMake should search for recently modified projects:');
-
-  ComboBoxGame.Text := ExcludeTrailingBackslash(TextDirGame);
+  LTextDirGame := BrowseFolder(Handle, 'Select the base directory of the game UMake should search for recently modified projects:');
+  ComboBoxGame.Text := ExcludeTrailingBackslash(LTextDirGame);
   ComboBoxGameChange(ComboBoxGame);
   ComboBoxGame.SetFocus;
 end;
@@ -152,54 +158,70 @@ end;
 
 procedure TfrmShortcuts.ButtonCreateClick(Sender: TObject);
 begin
-       if RadioButtonGeneric.Checked then CreateShortcutGeneric
-  else if RadioButtonProject.Checked then CreateShortcutProject
-  else if RadioButtonAuto   .Checked then CreateShortcutAuto;
+  if RadioButtonGeneric.Checked then
+    CreateShortcutGeneric
+  else
+  if RadioButtonProject.Checked then
+    CreateShortcutProject
+  else
+  if RadioButtonAuto.Checked then
+    CreateShortcutAuto;
 end;
 
 procedure TfrmShortcuts.CreateShortcutGeneric;
 var
-  ShortcutDesktop: TFileShortcut;
+  LShortcutDesktop: TFileShortcut;
 begin
-  ShortcutDesktop := TFileShortcut.Create;
-  ShortcutDesktop.Path := GetLongPath(ParamStr(0));
-  ShortcutDesktop.Description := 'Compile an UnrealScript file by dropping it on this icon.';
-  ShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + 'UMake.lnk');
-  ShortcutDesktop.Free;
+  LShortcutDesktop := TFileShortcut.Create;
+  try
+    LShortcutDesktop.Path := GetLongPath(ParamStr(0));
+    LShortcutDesktop.Description := 'Compile an UnrealScript file by dropping it on this icon.';
+    LShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + 'UMake.lnk');
+  finally
+    LShortcutDesktop.Free;
+  end;
 end;
 
 procedure TfrmShortcuts.CreateShortcutProject;
 var
-  ShortcutDesktop: TFileShortcut;
+  LShortcutDesktop: TFileShortcut;
 begin
-  ShortcutDesktop := TFileShortcut.Create;
-  ShortcutDesktop.Path := GetLongPath(ParamStr(0));
-  ShortcutDesktop.Arguments := GetQuotedParam(Configuration.DirPackage);
-  ShortcutDesktop.Description := Format('Double-click this icon to compile %s.', [Configuration.Package]);
-  ShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + Format('Compile %s.lnk', [Configuration.Package]));
-  ShortcutDesktop.Free;
+  LShortcutDesktop := TFileShortcut.Create;
+  try
+  LShortcutDesktop.Path := GetLongPath(ParamStr(0));
+  LShortcutDesktop.Arguments := GetQuotedParam(Configuration.DirPackage);
+  LShortcutDesktop.Description := Format('Double-click this icon to compile %s.', [Configuration.Package]);
+  LShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + Format('Compile %s.lnk', [Configuration.Package]));
+  finally
+    LShortcutDesktop.Free;
+  end;
 end;
 
 procedure TfrmShortcuts.CreateShortcutAuto;
 var
-  ShortcutDesktop: TFileShortcut;
-  TextDirGame: string;
+  LShortcutDesktop: TFileShortcut;
+  LTextDirGame: string;
 begin
-  TextDirGame := GetLongPath(ComboBoxGame.Text);
+  LTextDirGame := GetLongPath(ComboBoxGame.Text);
 
-  if FileExists(IncludeTrailingBackslash(TextDirGame) + 'System\ucc.exe') then
+  if TFile.Exists(TPath.Combine(LTextDirGame, 'System\ucc.exe')) then
   begin
-    ShortcutDesktop := TFileShortcut.Create;
-    ShortcutDesktop.Path := GetLongPath(ParamStr(0));
-    ShortcutDesktop.Arguments := Format('/auto %s', [GetQuotedParam(TextDirGame)]);
-    ShortcutDesktop.Description := Format('Double-click this icon to compile the most recently modified project in %s.', [ExtractFileName(ComboBoxGame.Text)]);
-    ShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + Format('Compile %s Project.lnk', [ExtractFileName(ComboBoxGame.Text)]));
-    ShortcutDesktop.Free;
+    LShortcutDesktop := TFileShortcut.Create;
+    try
+      LShortcutDesktop.Path := GetLongPath(ParamStr(0));
+      LShortcutDesktop.Arguments := Format('/auto %s', [GetQuotedParam(LTextDirGame)]);
+      LShortcutDesktop.Description := Format('Double-click this icon to compile the most recently modified project in %s.', [ExtractFileName(ComboBoxGame.Text)]);
+      LShortcutDesktop.Save(IncludeTrailingBackslash(GetDesktopPath) + Format('Compile %s Project.lnk', [ExtractFileName(ComboBoxGame.Text)]));
+    finally
+      LShortcutDesktop.Free;
+    end;
   end
-  else begin
-    if DirectoryExists(TextDirGame)
-      then Application.MessageBox('Invalid game directory.'#13#10#13#10'The game directory you selected seems to be invalid (no compiler found). Maybe you have to download and install a developer''s toolkit first.', PChar(Application.Title), MB_ICONERROR)
-      else Application.MessageBox('The selected game directory doesn''t exist.', PChar(Application.Title), MB_ICONERROR);
+  else
+  begin
+    if TDirectory.Exists(LTextDirGame) then
+      MessageDlg('Invalid game directory.' + #13#10#13#10 + 'The game directory you selected seems to be invalid (no compiler found). Maybe you have to download and install a developer''s toolkit first.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0)
+    else
+      MessageDlg('The selected game directory doesn''t exist.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 
     ComboBoxGame.SetFocus;
     ModalResult := mrNone;

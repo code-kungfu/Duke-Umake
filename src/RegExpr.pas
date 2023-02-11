@@ -1625,7 +1625,9 @@ var AModifiersInt : integer) : boolean;
  begin
   Result := true;
   IsOn := true;
+  {$HINTS OFF}
   Mask := 0; // prevent compiler warning
+  {$HINTS ON}
   for i := 1 to length (AModifiers) do
    if AModifiers [i] = '-'
     then IsOn := false

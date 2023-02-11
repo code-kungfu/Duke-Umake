@@ -138,11 +138,8 @@ uses
 
   { UMake Forms }
   UMake.Forms.Options,
-  UMake.Forms.Launcher;
+  UMake.Forms.Launcher, System.UITypes;
 {$ENDREGION}
-
-const
-  CRLF = #13#10;
 
 {$R *.DFM}
 
@@ -152,75 +149,73 @@ const
 
 function TInfoError.GetTextMessageFormatted: string;
 begin
-  if Length(FTextMessageFormatted) = 0 then
+  if FTextMessageFormatted.Length = 0 then
   begin
     FTextMessageFormatted := TextMessage;
-
-    FTextMessageFormatted := ReplaceRegExpr('\s+',           FTextMessageFormatted, ' ');
-    FTextMessageFormatted := ReplaceRegExpr('^''|''$',       FTextMessageFormatted, '');
+    FTextMessageFormatted := ReplaceRegExpr('\s+', FTextMessageFormatted, ' ');
+    FTextMessageFormatted := ReplaceRegExpr('^''|''$', FTextMessageFormatted, string.Empty);
     FTextMessageFormatted := ReplaceRegExpr('(\W)''|''(\W)', FTextMessageFormatted, '$1$2', True);
-    FTextMessageFormatted := ReplaceRegExpr('([^.])$',       FTextMessageFormatted, '$1.',  True);
+    FTextMessageFormatted := ReplaceRegExpr('([^.])$', FTextMessageFormatted, '$1.',  True);
   end;
-
   Result := FTextMessageFormatted;
 end;
 
-
-var
-  StringListExplanations: TStringList = nil;
-
-
 function TInfoError.GetTextExplanation: string;
 var
-  IndexCharSeparator: Integer;
-  IndexExplanation: Integer;
-  RegExprExplanation: TRegExpr;
-  TextLineExplanation: string;
-  TextFileExplanations: string;
+  LIndexCharSeparator: Integer;
+  LRegExprExplanation: TRegExpr;
+  LTextLineExplanation: string;
+  LTextFileExplanations: string;
+  LStringListExplanations: TStringList;
 begin
-  if Length(FTextExplanation) = 0 then
-  begin
-    if not Assigned(StringListExplanations) then
+  LStringListExplanations := TStringList.Create;
+  try
+    if FTextExplanation.Length = 0 then
     begin
-      TextFileExplanations := ChangeFileExt(ParamStr(0), 'Explanations.txt');
+      if not Assigned(LStringListExplanations) then
+      begin
+        LTextFileExplanations := ChangeFileExt(ParamStr(0), 'Explanations.txt');
 
-      StringListExplanations := TStringList.Create;
-      if FileExists(TextFileExplanations) then
-        StringListExplanations.LoadFromFile(TextFileExplanations);
-    end;
-
-    RegExprExplanation := TRegExpr.Create;
-
-    for IndexExplanation := 0 to StringListExplanations.Count - 1 do
-    begin
-      TextLineExplanation := StringListExplanations[IndexExplanation];
-
-      IndexCharSeparator := Pos(#9, TextLineExplanation);
-      if IndexCharSeparator = 0 then
-        Continue;
-
-      try
-        RegExprExplanation.Expression := Copy(TextLineExplanation, 1, IndexCharSeparator - 1);
-
-        if RegExprExplanation.Exec(TextMessageFormatted) then
-        begin
-          FTextExplanation := Copy(TextLineExplanation, IndexCharSeparator + 1, Length(TextLineExplanation));
-          FTextExplanation := ReplaceRegExpr('\\n', FTextExplanation, CRLF);
-          FTextExplanation := RegExprExplanation.Substitute(FTextExplanation);
-          Break;
-        end;
-      except
-        on ERegExpr do;
+        if TFile.Exists(LTextFileExplanations) then
+          LStringListExplanations.LoadFromFile(LTextFileExplanations);
       end;
+
+      LRegExprExplanation := TRegExpr.Create;
+      try
+        for var LIndexExplanation: Integer := 0 to LStringListExplanations.Count - 1 do
+        begin
+          LTextLineExplanation := LStringListExplanations[LIndexExplanation];
+
+          LIndexCharSeparator := Pos(#9, LTextLineExplanation);
+          if LIndexCharSeparator = 0 then
+            Continue;
+
+          try
+            LRegExprExplanation.Expression := Copy(LTextLineExplanation, 1, LIndexCharSeparator - 1);
+
+            if LRegExprExplanation.Exec(TextMessageFormatted) then
+            begin
+              FTextExplanation := Copy(LTextLineExplanation, LIndexCharSeparator + 1, Length(LTextLineExplanation));
+              FTextExplanation := ReplaceRegExpr('\\n', FTextExplanation, sLineBreak);
+              FTextExplanation := LRegExprExplanation.Substitute(FTextExplanation);
+              Break;
+            end;
+          except
+            on ERegExpr do;
+          end;
+        end;
+      finally
+        LRegExprExplanation.Free;
+      end;
+
+      if Length(FTextExplanation) = 0 then
+        FTextExplanation := 'Sorry, no further explanation available.';
     end;
 
-    RegExprExplanation.Free;
-
-    if Length(FTextExplanation) = 0 then
-      FTextExplanation := 'Sorry, no further explanation available.';
+    Result := FTextExplanation;
+  finally
+    LStringListExplanations.Free;
   end;
-
-  Result := FTextExplanation;
 end;
 
 (*****************************************************************************)
@@ -231,15 +226,15 @@ procedure TfrmMainForm.FormCreate(Sender: TObject);
 begin
   Options := TOptions.Create;
 
-  ImageError  .Picture.Icon.Handle := LoadIcon(0, IDI_HAND);
+  ImageError.Picture.Icon.Handle := LoadIcon(0, IDI_HAND);
   ImageWarning.Picture.Icon.Handle := LoadIcon(0, IDI_EXCLAMATION);
 
   PageControlDetails.ActivePage := TabSheetMessages;
-  TabSheetError   .TabVisible := False;
+  TabSheetError.TabVisible := False;
   TabSheetWarnings.TabVisible := False;
 
   StaticTextProgress.DoubleBuffered := True;
-  ProgressBar       .DoubleBuffered := True;
+  ProgressBar.DoubleBuffered := True;
   PageControlDetails.DoubleBuffered := True;
 
   Constraints.MaxHeight := Constraints.MinHeight;
@@ -247,136 +242,144 @@ end;
 
 procedure TfrmMainForm.Startup;
 var
-  CountFiles: Integer;
-  DateTimePackage: TDateTime;
-  DateTimeSource: TDateTime;
-  FlagAuto: Boolean;
-  FlagSetup: Boolean;
-  FlagUpdated: Boolean;
-  IndexPackage: Integer;
-  IndexParam: Integer;
-  IndexProject: Integer;
-  ResultFindDir: Integer;
-  ResultFindFile: Integer;
-  SearchRecDir: TSearchRec;
-  SearchRecFile: TSearchRec;
-  TextDirGame: string;
-  TextDirPackage: string;
-  TextDirPackageLatest: string;
-  TextFilePackage: string;
-  TextFileSource: string;
-  TextPackage: string;
+  LCountFiles: Integer;
+  LDateTimePackage: TDateTime;
+  LDateTimeSource: TDateTime;
+  LFlagAuto: Boolean;
+  LFlagSetup: Boolean;
+  LFlagUpdated: Boolean;
+  LIndexProject: Integer;
+  LResultFindDir: Integer;
+  LResultFindFile: Integer;
+  LSearchRecDir: TSearchRec;
+  LSearchRecFile: TSearchRec;
+  LTextDirGame: string;
+  LTextDirPackage: string;
+  LTextDirPackageLatest: string;
+  LTextFilePackage: string;
+  LTextFileSource: string;
+  LTextPackage: string;
 begin
-  FlagAuto  := False;
-  FlagSetup := False;
-  TextFileSource := EmptyStr;
+  LFlagAuto := False;
+  LFlagSetup := False;
+  LTextFileSource := string.Empty;
 
-  for IndexParam := 1 to ParamCount do
+  for var LIndexParam: Integer := 1 to ParamCount do
   begin
-         if AnsiSameText(ParamStr(IndexParam), '/setup') then FlagSetup := True
-    else if AnsiSameText(ParamStr(IndexParam), '/auto')  then FlagAuto  := True
-
-    else if (Length(ParamStr(IndexParam)) > 0) and (ParamStr(IndexParam)[1] <> '/') then
+    if SameText(ParamStr(LIndexParam), '/setup') then
+      LFlagSetup := True
+    else
+    if SameText(ParamStr(LIndexParam), '/auto') then
+      LFlagAuto := True
+    else
+    if (ParamStr(LIndexParam).Length > 0) and (ParamStr(LIndexParam)[1] <> '/') then
     begin
-      if Length(TextFileSource) = 0 then
+      if LTextFileSource.Length = 0 then
       begin
-        TextFileSource := GetLongPath(ParamStr(IndexParam));
-        if DirectoryExists(TextFileSource) then
-          TextFileSource := IncludeTrailingBackslash(TextFileSource);
+        LTextFileSource := GetLongPath(ParamStr(LIndexParam));
+        if TDirectory.Exists(LTextFileSource) then
+          LTextFileSource := IncludeTrailingBackslash(LTextFileSource);
       end;
     end;
   end;
 
-  if Length(TextFileSource) = 0 then
+  if LTextFileSource.Length = 0 then
   begin
-    if FlagSetup then
+    if LFlagSetup then
     begin
       frmOptions.Options := Options;
       frmOptions.ShowModal;
-      Close;
+      Self.Close;
     end
-
-    else if FlagAuto then
+    else
+    if LFlagAuto then
     begin
-      Application.MessageBox('Specify the base directory of a game along with the /auto switch to automatically compile the most recently modified project for that game.', PChar(Application.Title), MB_ICONINFORMATION);
-      Close;
+      MessageDlg('Specify the base directory of a game along with the /auto switch to automatically compile the most recently modified project for that game.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+      Self.Close;
     end
-
-    else begin
+    else
+    begin
       frmLauncher.Options := Options;
-      if frmLauncher.ShowModal = mrOk
-        then Configuration := frmLauncher.Configuration
-        else Close;
+      if frmLauncher.ShowModal = mrOk then
+        Configuration := frmLauncher.Configuration
+      else
+        Self.Close;
     end;
   end
-  else begin
-    if FlagAuto then
+  else
+  begin
+    if LFlagAuto then
     begin
-      TextDirGame := GetLongPath(TextFileSource);
-      TextFileSource := EmptyStr;
+      LTextDirGame := GetLongPath(LTextFileSource);
+      LTextFileSource := string.Empty;
 
-      if FileExists(IncludeTrailingBackslash(TextDirGame) + 'System\ucc.exe') then
+      if TFile.Exists(TPath.Combine(LTextDirGame, 'System\ucc.exe')) then
       begin
-        DateTimeSource := 0.0;
-        TextDirPackageLatest := EmptyStr;
-
+        LDateTimeSource := 0.0;
+        LTextDirPackageLatest := string.Empty;
         try
-          ResultFindDir := FindFirst(IncludeTrailingBackslash(TextDirGame) + '*', faDirectory, SearchRecDir);
-          while ResultFindDir = 0 do
+          LResultFindDir := FindFirst(IncludeTrailingBackslash(LTextDirGame) + '*', faDirectory, LSearchRecDir);
+          while LResultFindDir = 0 do
           begin
-            TextDirPackage := IncludeTrailingBackslash(TextDirGame) + SearchRecDir.Name + '\';
+            LTextDirPackage := IncludeTrailingBackslash(LTextDirGame) + LSearchRecDir.Name + '\';
 
-            if DirectoryExists(TextDirPackage + 'Classes') then
+            if TDirectory.Exists(TPath.Combine(LTextDirPackage, 'Classes')) then
             begin
-              ResultFindFile := FindFirst(TextDirPackage + 'Classes\*.uc', faAnyFile, SearchRecFile);
-              while ResultFindFile = 0 do
+              LResultFindFile := FindFirst(LTextDirPackage + 'Classes\*.uc', faAnyFile, LSearchRecFile);
+              while LResultFindFile = 0 do
               begin
-                if DateTimeSource < FileDateToDateTime(SearchRecFile.Time) then
+                if LDateTimeSource < FileDateToDateTime(LSearchRecFile.Time) then
                 begin
-                  DateTimeSource := FileDateToDateTime(SearchRecFile.Time);
-                  TextDirPackageLatest := TextDirPackage;
+                  LDateTimeSource := FileDateToDateTime(LSearchRecFile.Time);
+                  LTextDirPackageLatest := LTextDirPackage;
                 end;
-
-                ResultFindFile := FindNext(SearchRecFile);
+                LResultFindFile := FindNext(LSearchRecFile);
               end;
-              FindClose(SearchRecFile);
+              FindClose(LSearchRecFile);
             end;
 
-            ResultFindDir := FindNext(SearchRecDir);
+            LResultFindDir := FindNext(LSearchRecDir);
           end;
-          FindClose(SearchRecDir);
+          FindClose(LSearchRecDir);
         except
           on EInOutError do;
         end;
 
-        if Length(TextDirPackageLatest) = 0 then
+        if LTextDirPackageLatest.Length = 0 then
         begin
-          Application.MessageBox('No project directories with source files found in game directory.', PChar(Application.Title), MB_ICONINFORMATION);
-          Close;
+          MessageDlg('No project directories with source files found in game directory.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+          Self.Close;
         end
-        else begin
-          TextFileSource := TextDirPackageLatest;
-        end;
+        else
+          LTextFileSource := LTextDirPackageLatest;
       end
-      else begin
-        Application.MessageBox('Invalid game directory given with /auto switch.', PChar(Application.Title), MB_ICONERROR);
-        Close;
+      else
+      begin
+        MessageDlg('Invalid game directory given with /auto switch.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+        Self.Close;
       end;
     end;
 
-    if Length(TextFileSource) > 0 then
+    if LTextFileSource.Length > 0 then
     begin
-      TextDirPackage := ExcludeTrailingBackslash(ExtractFilePath(TextFileSource));
-      if AnsiSameText(ExtractFileName(TextDirPackage), 'Classes') then
-        TextDirPackage := ExcludeTrailingBackslash(ExtractFilePath(TextDirPackage));
+      LTextDirPackage := ExcludeTrailingBackslash(ExtractFilePath(LTextFileSource));
+      if SameText(ExtractFileName(LTextDirPackage), 'Classes') then
+        LTextDirPackage := ExcludeTrailingBackslash(ExtractFilePath(LTextDirPackage));
 
       try
-        Configuration := TConfiguration.Create(ExtractFileName(TextDirPackage), ExtractFilePath(TextDirPackage));
+        Configuration := TConfiguration.Create(ExtractFileName(LTextDirPackage), ExtractFilePath(LTextDirPackage));
       except
-        on EConfigurationGameDirNotFound    do ErrorMessageBox('Game directory not found for the given file.');
-        on EConfigurationGameDirInvalid     do ErrorMessageBox('UnrealScript project directories must be located directly below the game base directory.');
-        on EConfigurationPackageDirNotFound do ErrorMessageBox('Package directory not found for the given file.');
-        on EConfigurationPackageDirInvalid  do ErrorMessageBox('UnrealScript project directories must contain a "Classes" subdirectory for UnrealScript source files.');
+        on EConfigurationGameDirNotFound do
+          ErrorMessageBox('Game directory not found for the given file.');
+
+        on EConfigurationGameDirInvalid do
+          ErrorMessageBox('UnrealScript project directories must be located directly below the game base directory.');
+
+        on EConfigurationPackageDirNotFound do
+          ErrorMessageBox('Package directory not found for the given file.');
+
+        on EConfigurationPackageDirInvalid do
+          ErrorMessageBox('UnrealScript project directories must contain a "Classes" subdirectory for UnrealScript source files.');
       end;
     end;
   end;
@@ -389,32 +392,35 @@ begin
       on EConfigurationGameIniNotFound do
       begin
         ErrorMessageBox('Unable to find the main game configuration file.');
-        Close;
+        Self.Close;
         Exit;
       end;
     end;
 
-    if FlagSetup then
+    if LFlagSetup then
     begin
       frmOptions.Configuration := Configuration;
       frmOptions.Options := Options;
       frmOptions.ShowModal;
-      Close;
+      Self.Close;
     end
-    else begin
+    else
+    begin
       Options.RegOptProjects.Value := Configuration.DirPackage;
-      IndexProject := 0;
+      LIndexProject := 0;
 
-      while IndexProject < Options.RegOptProjects.ItemCount do
+      while LIndexProject < Options.RegOptProjects.ItemCount do
       begin
-        if AnsiCompareText(Configuration.DirPackage, Options.RegOptProjects[IndexProject].Value) <= 0 then Break;
-        Inc(IndexProject);
+        if CompareText(Configuration.DirPackage, Options.RegOptProjects[LIndexProject].Value) <= 0 then
+          Break;
+
+        Inc(LIndexProject);
       end;
 
-      if (IndexProject >= Options.RegOptProjects.ItemCount) or not AnsiSameText(Configuration.DirPackage, Options.RegOptProjects[IndexProject].Value) then
+      if (LIndexProject >= Options.RegOptProjects.ItemCount) or not AnsiSameText(Configuration.DirPackage, Options.RegOptProjects[LIndexProject].Value) then
       begin
-        Options.RegOptProjects.ItemInsert(IndexProject);
-        Options.RegOptProjects[IndexProject].Value := Configuration.DirPackage;
+        Options.RegOptProjects.ItemInsert(LIndexProject);
+        Options.RegOptProjects[LIndexProject].Value := Configuration.DirPackage;
       end;
 
       if not FileExists(IncludeTrailingBackslash(Configuration.DirGame) + Configuration.Package + '\make.ini') then
@@ -424,71 +430,71 @@ begin
 
         if frmOptions.ShowModal <> mrOk then
         begin
-          Close;
+          Self.Close;
           Exit;
         end;
       end;
 
-      FlagUpdated := False;
+      LFlagUpdated := False;
 
-      for IndexPackage := 0 to Configuration.StringListPackages.Count - 1 do
+      for var LIndexPackage: Integer := 0 to Configuration.StringListPackages.Count - 1 do
       begin
-        TextPackage := Configuration.StringListPackages[IndexPackage];
-        TextFilePackage := Configuration.FindFilePackage(TextPackage);
+        LTextPackage := Configuration.StringListPackages[LIndexPackage];
+        LTextFilePackage := Configuration.FindFilePackage(LTextPackage);
 
-        if AnsiSameText(TextPackage, Configuration.Package) or (Length(TextFilePackage) = 0) then
+        if SameText(LTextPackage, Configuration.Package) or (LTextFilePackage.Length = 0) then
         begin
-          CountFiles := 0;
-
+          LCountFiles := 0;
           try
-            if FileExists(TextFilePackage)
-              then DateTimePackage := FileDateToDateTime(FileAge(TextFilePackage))
-              else DateTimePackage := 0.0;
+            if TFile.Exists(LTextFilePackage) then
+              LDateTimePackage := FileDateToDateTime(FileAge(LTextFilePackage))
+            else
+              LDateTimePackage := 0.0;
 
-            ResultFindFile := FindFirst(IncludeTrailingBackslash(Configuration.DirGame) + TextPackage + '\Classes\*.uc', faAnyFile, SearchRecFile);
-            while ResultFindFile = 0 do
+            LResultFindFile := FindFirst(IncludeTrailingBackslash(Configuration.DirGame) + LTextPackage + '\Classes\*.uc', faAnyFile, LSearchRecFile);
+            while LResultFindFile = 0 do
             begin
-              DateTimeSource := FileDateToDateTime(SearchRecFile.Time);
-              if DateTimeSource > DateTimePackage then
-                FlagUpdated := True;
+              LDateTimeSource := FileDateToDateTime(LSearchRecFile.Time);
+              if LDateTimeSource > LDateTimePackage then
+                LFlagUpdated := True;
 
-              Inc(CountFiles);
-              ResultFindFile := FindNext(SearchRecFile);
+              Inc(LCountFiles);
+              LResultFindFile := FindNext(LSearchRecFile);
             end;
-            FindClose(SearchRecFile);
+            FindClose(LSearchRecFile);
           except
             on EInOutError do;
           end;
 
-          if CountFiles = 0 then
+          if LCountFiles = 0 then
           begin
-            ErrorMessageBox(Format('No valid project directory found for package %s (which requires recompilation).', [TextPackage]));
+            ErrorMessageBox(Format('No valid project directory found for package %s (which requires recompilation).', [LTextPackage]));
             Close;
             Exit;
           end;
 
-          ProgressBar.Max := ProgressBar.Max + CountFiles * 2;
+          ProgressBar.Max := ProgressBar.Max + LCountFiles * 2;
         end
-        else begin
-          if not AnsiSameText(ExtractFileExt(TextFilePackage), '.u') then
+        else
+        begin
+          if not AnsiSameText(ExtractFileExt(LTextFilePackage), '.u') then
           begin
-            ErrorMessageBox(Format('Invalid dependency on non-code package %s.', [ExtractFileName(TextFilePackage)]));
-            Close;
+            ErrorMessageBox(Format('Invalid dependency on non-code package %s.', [ExtractFileName(LTextFilePackage)]));
+            Self.Close;
             Exit;
           end;
-
           ProgressBar.Max := ProgressBar.Max + 1;
         end;
       end;
 
-      if FlagUpdated or (MessageBox(Application.Handle, PChar(Format('Your project, %s, seems to be up to date. Compile anyway?', [Configuration.Package])), PChar(Application.Title), MB_ICONINFORMATION + MB_YESNO) = IDYES)
-        then Show
-        else Close;
+      if LFlagUpdated or (MessageBox(Application.Handle, PChar(Format('Your project, %s, seems to be up to date. Compile anyway?', [Configuration.Package])), PChar(Application.Title), MB_ICONINFORMATION + MB_YESNO) = IDYES) then
+        Self.Show
+      else
+        Self.Close;
     end;
   end
-  else begin
-    Close;
-  end;
+  else
+    Self.Close;
 end;
 
 procedure TfrmMainForm.ErrorMessageBox(TextMessage: string; OptionsMessage: Integer);
@@ -498,13 +504,13 @@ end;
 
 procedure TfrmMainForm.ErrorDetails(InfoError: TInfoError; LabelLocation: TLabel; RichEdit: TRichEdit);
 var
-  IndexParagraph: Integer;
-  RegExprParagraph: TRegExpr;
-  StringListParagraphs: TStringList;
+  LRegExprParagraph: TRegExpr;
+  LStringListParagraphs: TStringList;
 begin
   if Length(InfoError.TextFile) = 0 then
     LabelLocation.Caption := 'Occurred before compilation'
-  else if InfoError.IndexLine = 0 then
+  else
+  if InfoError.IndexLine = 0 then
     LabelLocation.Caption := ExtractFileName(InfoError.TextFile)
   else
     LabelLocation.Caption := Format('%s (line %d)', [ExtractFileName(InfoError.TextFile), InfoError.IndexLine]);
@@ -516,40 +522,37 @@ begin
   RichEdit.SelAttributes.Style := [];
   RichEdit.Paragraph.FirstIndent := 2;
 
-  RichEdit.SelText := InfoError.TextMessageFormatted + CRLF;
+  RichEdit.SelText := InfoError.TextMessageFormatted + sLineBreak;
 
-  if Length(InfoError.TextExplanation) > 0 then
+  if InfoError.TextExplanation.Length > 0 then
   begin
     RichEdit.SelAttributes.Size := 6;
-    RichEdit.SelText := CRLF;
-
+    RichEdit.SelText := sLineBreak;
     RichEdit.SelAttributes.Size := RichEditError.Font.Size;
     RichEdit.SelAttributes.Style := [fsBold];
-    RichEdit.SelText := 'Explanation' + CRLF;
+    RichEdit.SelText := 'Explanation' + sLineBreak;
     RichEdit.SelAttributes.Style := [];
 
-    StringListParagraphs := TStringList.Create;
+    LStringListParagraphs := TStringList.Create;
+    LRegExprParagraph := TRegExpr.Create;
+    try
+      LRegExprParagraph.Expression := '(\r?\n)+';
+      LRegExprParagraph.Split(InfoError.TextExplanation, LStringListParagraphs);
 
-    RegExprParagraph := TRegExpr.Create;
-    RegExprParagraph.Expression := '(\r?\n)+';
-    RegExprParagraph.Split(InfoError.TextExplanation, StringListParagraphs);
-
-    for IndexParagraph := 0 to StringListParagraphs.Count - 1 do
-    begin
-      RichEdit.SelAttributes.Size := 3;
-      RichEdit.SelText := CRLF;
-
-      RichEdit.SelAttributes.Size := RichEditError.Font.Size;
-      RichEdit.SelText := StringListParagraphs[IndexParagraph];
-
-      if IndexParagraph < StringListParagraphs.Count - 1 then
-        RichEdit.SelText := CRLF;
+      for var LIndexParagraph: Integer := 0 to LStringListParagraphs.Count - 1 do
+      begin
+        RichEdit.SelAttributes.Size := 3;
+        RichEdit.SelText := sLineBreak;
+        RichEdit.SelAttributes.Size := RichEditError.Font.Size;
+        RichEdit.SelText := LStringListParagraphs[LIndexParagraph];
+        if LIndexParagraph < LStringListParagraphs.Count - 1 then
+          RichEdit.SelText := sLineBreak;
+      end;
+      RichEdit.Perform(WM_VSCROLL, SB_TOP, 0);
+    finally
+      LStringListParagraphs.Free;
+      LRegExprParagraph.Free;
     end;
-
-    RichEdit.Perform(WM_VSCROLL, SB_TOP, 0);
-
-    StringListParagraphs.Free;
-    RegExprParagraph.Free;
   end;
 
   RichEditError.Lines.EndUpdate;
@@ -560,12 +563,12 @@ end;
 
 procedure TfrmMainForm.FormShow(Sender: TObject);
 var
-  TextCommand: string;
-  TextDirSystem: string;
+  LTextCommand: string;
+  LTextDirSystem: string;
 begin
   TextFilePackageOriginal := Configuration.FindFilePackage(Configuration.Package);
 
-  if Length(TextFilePackageOriginal) > 0 then
+  if TextFilePackageOriginal.Length > 0 then
   begin
     TextFilePackageBackup := TextFilePackageOriginal + '.backup';
 
@@ -576,7 +579,7 @@ begin
     begin
       if Application.MessageBox(PChar(Format('UMake is unable to rename %s before recompiling it. Please make sure that the file isn''t loaded in UnrealEd or any other application at the moment.', [ExtractFileName(TextFilePackageOriginal)])), PChar(Application.Title), MB_ICONERROR + MB_RETRYCANCEL) <> IDRETRY then
       begin
-        Close;
+        Self.Close;
         Exit;
       end;
     end;
@@ -587,47 +590,47 @@ begin
   ButtonAbort.Cancel  := False;
   RichEditMessages.Paragraph.FirstIndent := 2;
   RichEditMessages.Paragraph.LeftIndent  := 6;
-  RegExprClass          := TRegExpr.Create;
-  RegExprPackage        := TRegExpr.Create;
-  RegExprParsing        := TRegExpr.Create;
-  RegExprCompiling      := TRegExpr.Create;
-  RegExprCompleted      := TRegExpr.Create;
-  RegExprErrorCompile   := TRegExpr.Create;
-  RegExprErrorParse     := TRegExpr.Create;
+  RegExprClass := TRegExpr.Create;
+  RegExprPackage := TRegExpr.Create;
+  RegExprParsing := TRegExpr.Create;
+  RegExprCompiling := TRegExpr.Create;
+  RegExprCompleted := TRegExpr.Create;
+  RegExprErrorCompile := TRegExpr.Create;
+  RegExprErrorParse := TRegExpr.Create;
   RegExprWarningCompile := TRegExpr.Create;
-  RegExprWarningParse   := TRegExpr.Create;
+  RegExprWarningParse := TRegExpr.Create;
 
-  RegExprClass         .Expression := '^([^.]+\.)?(\w+)';
-  RegExprPackage       .Expression := '^-+\s*(\w+)(\s*-\s*(\w+))?';
-  RegExprParsing       .Expression := '^Parsing\s+(\w+)';
-  RegExprCompiling     .Expression := '^Compiling\s+(\w+)';
-  RegExprCompleted     .Expression := '^(Success|Failure) - \d+ error\(s\)';
-  RegExprErrorCompile  .Expression := '^([A-Za-z]:\\.*?\\Classes\\\w+\.uc)\s*\((\d+)\)\s*:\s*Error,\s*(.*)';
-  RegExprErrorParse    .Expression := '^Script vs. class name mismatch \((([^/]+))/[^)]+\)|^Bad class definition|^Superclass \S+ of class ((\S+)) not found|^([^:]+: )Unknown property|^ObjectProperty ([^.]+\.[^.]+\.)';
+  RegExprClass.Expression := '^([^.]+\.)?(\w+)';
+  RegExprPackage.Expression := '^-+\s*(\w+)(\s*-\s*(\w+))?';
+  RegExprParsing.Expression := '^Parsing\s+(\w+)';
+  RegExprCompiling.Expression := '^Compiling\s+(\w+)';
+  RegExprCompleted.Expression := '^(Success|Failure) - \d+ error\(s\)';
+  RegExprErrorCompile.Expression := '^([A-Za-z]:\\.*?\\Classes\\\w+\.uc)\s*\((\d+)\)\s*:\s*Error,\s*(.*)';
+  RegExprErrorParse.Expression := '^Script vs. class name mismatch \((([^/]+))/[^)]+\)|^Bad class definition|^Superclass \S+ of class ((\S+)) not found|^([^:]+: )Unknown property|^ObjectProperty ([^.]+\.[^.]+\.)';
   RegExprWarningCompile.Expression := '^([A-Za-z]:\\.*?\\Classes\\\w+\.uc)\s*\((\d+)\)\s*:\s*ExecWarning,\s*(.*)';
-  RegExprWarningParse  .Expression := '^Failed loading\s+.*';
+  RegExprWarningParse.Expression := '^Failed loading\s+.*';
   PageControlDetails.ActivePage := TabSheetMessages;
-  TabSheetError   .TabVisible := False;
+  TabSheetError.TabVisible := False;
   TabSheetWarnings.TabVisible := False;
   InfoError := TInfoError.Create;
   ListInfoWarning := TList.Create;
   Configuration.Write;
-  TextDirSystem := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
+  LTextDirSystem := IncludeTrailingBackslash(Configuration.DirGame) + 'System';
 
-  TextCommand := Format('%s make -fixcompat -silent ini=%s',
-    [GetQuotedParam(IncludeTrailingBackslash(TextDirSystem) + 'ucc.exe'),
-     GetQuotedParam(GetRelativePath(IncludeTrailingBackslash(Configuration.DirPackage) + 'make.ini', IncludeTrailingBackslash(TextDirSystem)))]);
+  LTextCommand := Format('%s make -fixcompat -silent ini=%s',
+    [GetQuotedParam(IncludeTrailingBackslash(LTextDirSystem) + 'ucc.exe'),
+     GetQuotedParam(GetRelativePath(IncludeTrailingBackslash(Configuration.DirPackage) + 'make.ini', IncludeTrailingBackslash(LTextDirSystem)))]);
 
   ProgressBar.Position := 0;
   PipedProcess := TPipedProcess.Create;
-  PipedProcess.Directory   := TextDirSystem;
-  PipedProcess.Command     := TextCommand;
-  PipedProcess.OnDebug     := PipedProcessDebug;
-  PipedProcess.OnOutput    := PipedProcessOutput;
+  PipedProcess.Directory := LTextDirSystem;
+  PipedProcess.Command := LTextCommand;
+  PipedProcess.OnDebug := PipedProcessDebug;
+  PipedProcess.OnOutput := PipedProcessOutput;
   PipedProcess.OnTerminate := PipedProcessTerminate;
   PipedProcess.Debug;
 
-  if Options.RegOptDetails.Value And ButtonDetails.Enabled then
+  if Options.RegOptDetails.Value and ButtonDetails.Enabled then
     ButtonDetailsClick(ButtonDetails);
 
   StaticTextProgress.SetFocus;
@@ -639,21 +642,23 @@ begin
   // nothing
 end;
 
-procedure TfrmMainForm.PipedProcessOutput(Sender: TObject; const TextData: string; Pipe: TPipedOutput);
-  function FormatError(TextType: string; InfoError: TInfoError): string;
+procedure TfrmMainForm.PipedProcessOutput(Sender: TObject;
+                                          const TextData: string;
+                                          Pipe: TPipedOutput);
+
+  function FormatError(const ATextType: string; const AInfoError: TInfoError): string;
   begin
-    Result := Format('%s in %s (%d): %s', [TextType, ExtractFileName(InfoError.TextFile),
-                                                                     InfoError.IndexLine,
-                                                                     InfoError.TextMessage]);
+    Result := Format('%s in %s (%d): %s', [ATextType, ExtractFileName(AInfoError.TextFile),
+                                                                      AInfoError.IndexLine,
+                                                                      AInfoError.TextMessage]);
   end;
 var
-  ColorLine: TColor;
-  IndexCharSeparator: Integer;
-  IndexCharSeparatorCR: Integer;
-  IndexCharSeparatorLF: Integer;
-  IndexMatch: Integer;
-  InfoWarning: TInfoError;
-  TextLine: string;
+  LColorLine: TColor;
+  LIndexCharSeparator: Integer;
+  LIndexCharSeparatorCR: Integer;
+  LIndexCharSeparatorLF: Integer;
+  LInfoWarning: TInfoError;
+  LTextLine: string;
 begin
   if not FlagClosing then
     ButtonAbort.Enabled := True;
@@ -663,123 +668,129 @@ begin
   TextBufferPipe := TextBufferPipe + TextData;
   while Length(TextBufferPipe) > 0 do
   begin
-    IndexCharSeparatorCR := Pos(#13, TextBufferPipe);
-    IndexCharSeparatorLF := Pos(#10, TextBufferPipe);
+    LIndexCharSeparatorCR := Pos(#13, TextBufferPipe);
+    LIndexCharSeparatorLF := Pos(#10, TextBufferPipe);
 
-    if IndexCharSeparatorCR = Length(TextBufferPipe) then
-      IndexCharSeparatorCR := 0;
+    if LIndexCharSeparatorCR = Length(TextBufferPipe) then
+      LIndexCharSeparatorCR := 0;
 
-         if IndexCharSeparatorCR = 0 then IndexCharSeparator := IndexCharSeparatorLF
-    else if IndexCharSeparatorLF = 0 then IndexCharSeparator := IndexCharSeparatorCR
-    else begin
-      if IndexCharSeparatorCR < IndexCharSeparatorLF - 1
-        then IndexCharSeparator := IndexCharSeparatorCR
-        else IndexCharSeparator := IndexCharSeparatorLF;
+    if LIndexCharSeparatorCR = 0 then
+      LIndexCharSeparator := LIndexCharSeparatorLF
+    else
+    if LIndexCharSeparatorLF = 0 then
+      LIndexCharSeparator := LIndexCharSeparatorCR
+    else
+    begin
+      if LIndexCharSeparatorCR < LIndexCharSeparatorLF - 1 then
+        LIndexCharSeparator := LIndexCharSeparatorCR
+      else
+        LIndexCharSeparator := LIndexCharSeparatorLF;
     end;
 
-    if IndexCharSeparator = 0 then
+    if LIndexCharSeparator = 0 then
       Break;
 
-    TextLine := TrimRight(Copy(TextBufferPipe, 1, IndexCharSeparator));
-    Delete(TextBufferPipe, 1, IndexCharSeparator);
+    LTextLine := TrimRight(Copy(TextBufferPipe, 1, LIndexCharSeparator));
+    Delete(TextBufferPipe, 1, LIndexCharSeparator);
 
-    ColorLine := RichEditMessages.Font.Color;
+    LColorLine := RichEditMessages.Font.Color;
 
-    if RegExprPackage.Exec(TextLine) then
+    if RegExprPackage.Exec(LTextLine) then
     begin
-      TextLine := Format('----- %s', [RegExprPackage.Match[1]]);
+      LTextLine := Format('----- %s', [RegExprPackage.Match[1]]);
       if RegExprPackage.SubExprMatchCount > 1 then
-        TextLine := TextLine + Format(' (%s)', [RegExprPackage.Match[3]]);
+        LTextLine := LTextLine + Format(' (%s)', [RegExprPackage.Match[3]]);
 
       if not FlagClosing then
       begin
         if ProgressBar.Position < ProgressBar.Max then
           ProgressBar.StepIt;
+
         StaticTextProgress.Caption := Format('Reading %s', [RegExprPackage.Match[1]]);
       end;
     end
-
-    else if RegExprParsing.Exec(TextLine) then
+    else
+    if RegExprParsing.Exec(LTextLine) then
     begin
       if not FlagClosing then
       begin
         if ProgressBar.Position < ProgressBar.Max then
           ProgressBar.StepIt;
+
         StaticTextProgress.Caption := Format('Parsing %s', [RegExprParsing.Match[1]]);
       end;
     end
-
-    else if RegExprCompiling.Exec(TextLine) then
+    else
+    if RegExprCompiling.Exec(LTextLine) then
     begin
       if not FlagClosing then
       begin
         if ProgressBar.Position < ProgressBar.Max then
           ProgressBar.StepIt;
+
         StaticTextProgress.Caption := Format('Compiling %s', [RegExprCompiling.Match[1]]);
       end;
     end
 
-    else if RegExprErrorParse.Exec(TextLine) then
+    else
+    if RegExprErrorParse.Exec(LTextLine) then
     begin
-      InfoError.TextFile    := '';
-      InfoError.TextMessage := TextLine;
-      InfoError.IndexLine   := 0;
+      InfoError.TextFile := string.Empty;
+      InfoError.TextMessage := LTextLine;
+      InfoError.IndexLine := 0;
 
-      for IndexMatch := 1 to RegExprErrorParse.SubExprMatchCount do
+      for var LIndexMatch: Integer := 1 to RegExprErrorParse.SubExprMatchCount do
       begin
-        if (RegExprErrorParse.MatchLen[IndexMatch] > 0) and RegExprClass.Exec(RegExprErrorParse.Match[IndexMatch]) then
+        if (RegExprErrorParse.MatchLen[LIndexMatch] > 0) and RegExprClass.Exec(RegExprErrorParse.Match[LIndexMatch]) then
         begin
-          Delete(InfoError.TextMessage, RegExprErrorParse.MatchPos[IndexMatch], RegExprErrorParse.MatchLen[IndexMatch]);
-          Insert(RegExprErrorParse.Match[IndexMatch + 1], InfoError.TextMessage, RegExprErrorParse.MatchPos[IndexMatch]);
+          Delete(InfoError.TextMessage, RegExprErrorParse.MatchPos[LIndexMatch], RegExprErrorParse.MatchLen[LIndexMatch]);
+          Insert(RegExprErrorParse.Match[LIndexMatch + 1], InfoError.TextMessage, RegExprErrorParse.MatchPos[LIndexMatch]);
           InfoError.TextFile := IncludeTrailingBackslash(Configuration.DirPackage) + 'Classes\' + RegExprClass.Match[2] + '.uc';
           Break;
         end;
       end;
 
-      ColorLine := clRed;
+      LColorLine := clRed;
     end
-
-    else if RegExprErrorCompile.Exec(TextLine) then
+    else
+    if RegExprErrorCompile.Exec(LTextLine) then
     begin
-      InfoError.TextFile    :=          RegExprErrorCompile.Match[1];
-      InfoError.TextMessage :=          RegExprErrorCompile.Match[3];
-      InfoError.IndexLine   := StrToInt(RegExprErrorCompile.Match[2]);
-
-      ColorLine := clRed;
-      TextLine := FormatError('Error', InfoError);
+      InfoError.TextFile := RegExprErrorCompile.Match[1];
+      InfoError.TextMessage := RegExprErrorCompile.Match[3];
+      InfoError.IndexLine := StrToInt(RegExprErrorCompile.Match[2]);
+      LColorLine := clRed;
+      LTextLine := FormatError('Error', InfoError);
     end
-
-    else if RegExprWarningParse.Exec(TextLine) then
+    else
+    if RegExprWarningParse.Exec(LTextLine) then
     begin
-      InfoWarning := TInfoError.Create;
-      ListInfoWarning.Add(InfoWarning);
+      LInfoWarning := TInfoError.Create;
+      ListInfoWarning.Add(LInfoWarning);
 
-      InfoWarning.TextMessage := TextLine;
-      InfoWarning.TextFile    := '';
-      InfoWarning.IndexLine   := 0;
+      LInfoWarning.TextMessage := LTextLine;
+      LInfoWarning.TextFile    := '';
+      LInfoWarning.IndexLine   := 0;
 
-      ColorLine := clRed;
+      LColorLine := clRed;
     end
-
-    else if RegExprWarningCompile.Exec(TextLine) then
+    else
+    if RegExprWarningCompile.Exec(LTextLine) then
     begin
-      InfoWarning := TInfoError.Create;
-      ListInfoWarning.Add(InfoWarning);
-
-      InfoWarning.TextFile    :=          RegExprWarningCompile.Match[1];
-      InfoWarning.TextMessage :=          RegExprWarningCompile.Match[3];
-      InfoWarning.IndexLine   := StrToInt(RegExprWarningCompile.Match[2]);
-
-      ColorLine := clRed;
-      TextLine := FormatError('Warning', InfoWarning);
+      LInfoWarning := TInfoError.Create;
+      ListInfoWarning.Add(LInfoWarning);
+      LInfoWarning.TextFile := RegExprWarningCompile.Match[1];
+      LInfoWarning.TextMessage := RegExprWarningCompile.Match[3];
+      LInfoWarning.IndexLine := StrToInt(RegExprWarningCompile.Match[2]);
+      LColorLine := clRed;
+      LTextLine := FormatError('Warning', LInfoWarning);
     end
-
-    else if RegExprCompleted.Exec(TextLine) then
+    else
+    if RegExprCompleted.Exec(LTextLine) then
     begin
       StaticTextProgress.Caption := 'Finishing';
     end;
 
-    RichEditMessagesAppend(TextLine, ColorLine);
+    RichEditMessagesAppend(LTextLine, LColorLine);
   end;
 
   RichEditMessages.SelStart := RichEditMessages.Perform(EM_GETLIMITTEXT, 0, 0);
@@ -794,9 +805,10 @@ begin
 
   if FlagClosing then
   begin
-    Close;
+    Self.Close;
   end
-  else begin
+  else
+  begin
     if PipedProcess.ExitCode = 0 then
     begin
       ProgressBar.Position := ProgressBar.Max;
@@ -806,9 +818,9 @@ begin
       begin
         Options.PerformAction(perfSuccess, Self, Configuration);
       end
-      else begin
+      else
+      begin
         Options.PerformAction(perfFailure, Self, Configuration);
-
         if Visible then
         begin
           UpdateDetailsWarning;
@@ -816,27 +828,29 @@ begin
         end;
       end;
     end
-    else begin
+    else
+    begin
       StaticTextProgress.Caption := 'Failed';
       Options.PerformAction(perfFailure, Self, Configuration);
 
       if Visible then
       begin
-        if Length(InfoError.TextMessage) > 0 then
+        if InfoError.TextMessage.Length > 0 then
         begin
           UpdateDetailsError;
           if ListInfoWarning.Count > 0 then
             UpdateDetailsWarning;
+
           PageControlDetails.ActivePage := TabSheetError;
         end
-
-        else if ListInfoWarning.Count > 0 then
+        else
+        if ListInfoWarning.Count > 0 then
         begin
           UpdateDetailsWarning;
           PageControlDetails.ActivePage := TabSheetWarnings;
         end
-
-        else begin
+        else
+        begin
           if ButtonDetails.Enabled then
             ButtonDetailsClick(ButtonDetails);
         end;
@@ -845,7 +859,7 @@ begin
 
     ButtonAbort.Caption := '&Close';
     ButtonAbort.Enabled := True;
-    ButtonAbort.Cancel  := True;
+    ButtonAbort.Cancel := True;
   end;
 end;
 
@@ -853,7 +867,7 @@ procedure TfrmMainForm.RichEditMessagesAppend(TextAppend: string; ColorAppend: T
 begin
   RichEditMessages.SelStart := $7fffffff;
   RichEditMessages.SelAttributes.Color := ColorAppend;
-  RichEditMessages.SelText := TextAppend + CRLF;
+  RichEditMessages.SelText := TextAppend + sLineBreak;
 end;
 
 procedure TfrmMainForm.UpdateDetailsError;
@@ -865,14 +879,14 @@ end;
 
 procedure TfrmMainForm.UpdateDetailsWarning;
 var
-  ControlFocused: TControl;
+  LControlFocused: TControl;
 begin
   ErrorDetails(ListInfoWarning[IndexWarning], LabelWarningLocation, RichEditWarning);
   LabelWarningNumber.Caption := Format('(%d of %d)', [IndexWarning + 1, ListInfoWarning.Count]);
-  ControlFocused := ActiveControl;
+  LControlFocused := ActiveControl;
   ButtonWarningPrev.Enabled := IndexWarning > 0;
   ButtonWarningNext.Enabled := IndexWarning < ListInfoWarning.Count - 1;
-  if Assigned(ControlFocused) and not ControlFocused.Enabled then
+  if Assigned(LControlFocused) and not LControlFocused.Enabled then
     StaticTextProgress.SetFocus;
 
   ButtonWarningEdit.Enabled := Length(TInfoError(ListInfoWarning[IndexWarning]).TextFile) > 0;
@@ -904,12 +918,12 @@ begin
   frmOptions.ShowModal;
 
   if not Visible then
-    Close;
+    Self.Close;
 end;
 
 procedure TfrmMainForm.ButtonAbortClick(Sender: TObject);
 begin
-  Close;
+  Self.Close;
 end;
 
 procedure TfrmMainForm.ButtonDetailsClick(Sender: TObject);
@@ -926,8 +940,8 @@ end;
 procedure TfrmMainForm.ButtonErrorEditClick(Sender: TObject);
 begin
   Options.PerformEdit(Configuration, InfoError.TextFile, InfoError.IndexLine);
-  Hide;
-  Close;
+  Self.Hide;
+  Self.Close;
 end;
 
 procedure TfrmMainForm.TabSheetErrorResize(Sender: TObject);
@@ -945,14 +959,13 @@ begin
   if Assigned(PipedProcess) and PipedProcess.Executing then
   begin
     PipedProcess.Abort;
-
     ButtonAbort.Enabled := False;
     StaticTextProgress.Caption := 'Aborting';
-
     FlagClosing := True;
     CanClose := False;
   end
-  else begin
+  else
+  begin
     CanClose := not frmOptions.Visible;
   end;
 end;

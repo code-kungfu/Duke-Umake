@@ -24,9 +24,10 @@ type
   TOptionsPerformWindow = (perfWindowNone, perfWindowFront, perfWindowClose);
 
   TOptionsPerform = record
+  public
     RegOptWindow: TRegOptInteger;
     RegOptLaunch: TRegOptString;
-    RegOptSound:  TRegOptString;
+    RegOptSound: TRegOptString;
   end;
 
   TOptions = class
@@ -56,7 +57,7 @@ uses
 
   { Misc Libraries }
   SysTools,
-  RegExpr;
+  RegExpr, System.IOUtils, System.UITypes, Vcl.Dialogs;
 {$ENDREGION}
 
 (*****************************************************************************)
@@ -65,130 +66,129 @@ uses
 
 constructor TOptions.Create;
 const
-  TextNameProgram = 'Phase\UMake';
-  TextNameSettingPerform: array [TOptionsPerformIndex] of string = ('Success', 'Failure');
+  cTextNameProgram = 'Phase\UMake';
+  cTextNameSettingPerform: array [TOptionsPerformIndex] of string = ('Success', 'Failure');
 var
-  IndexPerform: TOptionsPerformIndex;
-  IndexProject: Integer;
-  Registry: TRegistry;
-  TextFileSound: string;
-  TextNameSetting: string;
-  TextNameSound: string;
+  LRegistry: TRegistry;
+  LTextFileSound: string;
+  LTextNameSetting: string;
+  LTextNameSound: string;
 begin
-  RegOptDetails  := TRegOptBoolean.Create(TextNameProgram, 'Details', False);
-  RegOptEditor   := TRegOptString.Create(TextNameProgram, 'Editor', '');
-  RegOptProjects := TRegOptString.CreateList(TextNameProgram, 'Projects');
+  RegOptDetails := TRegOptBoolean.Create(cTextNameProgram, 'Details', False);
+  RegOptEditor := TRegOptString.Create(cTextNameProgram, 'Editor', '');
+  RegOptProjects := TRegOptString.CreateList(cTextNameProgram, 'Projects');
 
-  for IndexProject := RegOptProjects.ItemCount - 1 downto 0 do
-    if not DirectoryExists(RegOptProjects[IndexProject].Value) then
-      RegOptProjects.ItemDelete(IndexProject);
-
-  if not DirectoryExists(RegOptProjects.Value) then
-    RegOptProjects.Value := '';
-
-  Registry := TRegistry.Create;
-
-  for IndexPerform := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
+  for var LIndexProject: Integer := RegOptProjects.ItemCount - 1 downto 0 do
   begin
-    case IndexPerform of
-      perfSuccess:  TextNameSound := 'SystemExclamation';
-      perfFailure:  TextNameSound := 'SystemHand';
-    end;
-
-    if Registry.OpenKeyReadOnly('\AppEvents\Schemes\Apps\.Default\' + TextNameSound + '\.Current')
-      then TextFileSound := Registry.ReadString('')
-      else TextFileSound := '';
-
-    TextNameSetting := 'Perform' + TextNameSettingPerform[IndexPerform];
-
-    with Perform[IndexPerform] do
-    begin
-      RegOptWindow := TRegOptInteger.Create(TextNameProgram, TextNameSetting + 'Window', Integer(perfWindowFront));
-      RegOptLaunch := TRegOptString .Create(TextNameProgram, TextNameSetting + 'Launch', '');
-      RegOptSound  := TRegOptString .Create(TextNameProgram, TextNameSetting + 'Sound', TextFileSound);
-
-      if (RegOptWindow.Value < Integer(Low (TOptionsPerformWindow)))
-      or (RegOptWindow.Value > Integer(High(TOptionsPerformWindow))) then
-        RegOptWindow.Value := Integer(perfWindowFront);
-    end;
+    if not TDirectory.Exists(RegOptProjects[LIndexProject].Value) then
+      RegOptProjects.ItemDelete(LIndexProject);
   end;
 
-  Registry.Free;
+  if not TDirectory.Exists(RegOptProjects.Value) then
+    RegOptProjects.Value := string.Empty;
+
+  LRegistry := TRegistry.Create;
+  try
+    for var LIndexPerform: TOptionsPerformIndex := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
+    begin
+      case LIndexPerform of
+        perfSuccess: LTextNameSound := 'SystemExclamation';
+        perfFailure: LTextNameSound := 'SystemHand';
+      end;
+
+      if LRegistry.OpenKeyReadOnly('\AppEvents\Schemes\Apps\.Default\' + LTextNameSound + '\.Current') then
+        LTextFileSound := LRegistry.ReadString(string.Empty)
+      else
+        LTextFileSound := string.Empty;
+
+      LTextNameSetting := 'Perform' + cTextNameSettingPerform[LIndexPerform];
+
+      Perform[LIndexPerform].RegOptWindow := TRegOptInteger.Create(cTextNameProgram, LTextNameSetting + 'Window', Integer(perfWindowFront));
+      Perform[LIndexPerform].RegOptLaunch := TRegOptString.Create(cTextNameProgram, LTextNameSetting + 'Launch', string.Empty);
+      Perform[LIndexPerform].RegOptSound := TRegOptString.Create(cTextNameProgram, LTextNameSetting + 'Sound', LTextFileSound);
+
+      if (Perform[LIndexPerform].RegOptWindow.Value < Integer(Low (TOptionsPerformWindow))) or
+         (Perform[LIndexPerform].RegOptWindow.Value > Integer(High(TOptionsPerformWindow))) then
+        Perform[LIndexPerform].RegOptWindow.Value := Integer(perfWindowFront);
+    end;
+  finally
+    LRegistry.Free;
+  end;
 end;
 
 destructor TOptions.Destroy;
-var
-  IndexPerform: TOptionsPerformIndex;
 begin
   RegOptDetails.Free;
   RegOptEditor.Free;
   RegOptProjects.Free;
 
-  for IndexPerform := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
+  for var LIndexPerform: TOptionsPerformIndex := Low(TOptionsPerformIndex) to High(TOptionsPerformIndex) do
   begin
-    with Perform[IndexPerform] do
-    begin
-      RegOptWindow.Destroy;
-      RegOptLaunch.Destroy;
-      RegOptSound .Destroy;
-    end;
+    Perform[LIndexPerform].RegOptWindow.Destroy;
+    Perform[LIndexPerform].RegOptLaunch.Destroy;
+    Perform[LIndexPerform].RegOptSound .Destroy;
   end;
 end;
 
 procedure TOptions.PerformAction(IndexPerform: TOptionsPerformIndex; Form: TCustomForm; Configuration: TConfiguration);
 var
-  TextCommand: string;
-  OptionsSound: Integer;
+  LTextCommand: string;
+  LOptionsSound: Integer;
 begin
-  with Perform[IndexPerform] do
+  if Perform[IndexPerform].RegOptSound.Value.Trim.Length > 0 then
   begin
-    if Length(Trim(RegOptSound.Value)) > 0 then
-    begin
-      OptionsSound := SND_FILENAME;
-      if TOptionsPerformWindow(RegOptWindow.Value) <> perfWindowClose then
-        OptionsSound := OptionsSound + SND_ASYNC;
+    LOptionsSound := SND_FILENAME;
+    if TOptionsPerformWindow(Perform[IndexPerform].RegOptWindow.Value) <> perfWindowClose then
+      LOptionsSound := LOptionsSound + SND_ASYNC;
 
-      PlaySound(PChar(RegOptSound.Value), 0, OptionsSound);
-    end;
+    PlaySound(PChar(Perform[IndexPerform].RegOptSound.Value), 0, LOptionsSound);
+  end;
 
-    TextCommand := RegOptLaunch.Value;
-    if Length(Trim(TextCommand)) > 0 then
-    begin
-      TextCommand := ReplaceRegExpr('%package%',    TextCommand, Configuration.Package);
-      TextCommand := ReplaceRegExpr('%packagedir%', TextCommand, Configuration.DirPackage);
-      TextCommand := ReplaceRegExpr('%gamedir%',    TextCommand, Configuration.DirGame);
-      LaunchProgram(TextCommand);
-    end;
+  LTextCommand := Perform[IndexPerform].RegOptLaunch.Value;
+  if LTextCommand.Trim.Length > 0 then
+  begin
+    LTextCommand := ReplaceRegExpr('%package%', LTextCommand, Configuration.Package);
+    LTextCommand := ReplaceRegExpr('%packagedir%', LTextCommand, Configuration.DirPackage);
+    LTextCommand := ReplaceRegExpr('%gamedir%', LTextCommand, Configuration.DirGame);
+    LaunchProgram(LTextCommand);
+  end;
 
-    case TOptionsPerformWindow(RegOptWindow.Value) of
-      perfWindowClose:  begin Form.Hide;  Form.Close;  end;
-      perfWindowFront:  begin Form.Show;  Form.Update; end;
-    end;
+  case TOptionsPerformWindow(Perform[IndexPerform].RegOptWindow.Value) of
+    perfWindowClose:
+      begin
+        Form.Hide;
+        Form.Close;
+      end;
+    perfWindowFront:
+      begin
+        Form.Show;
+        Form.Update;
+      end;
   end;
 end;
 
 procedure TOptions.PerformEdit(Configuration: TConfiguration; TextFileError: string; IndexLineError: Integer);
 var
-  TextCommand: string;
+  LTextCommand: string;
 begin
-  if Length(RegOptEditor.Value) > 0 then
+  if RegOptEditor.Value.Length > 0 then
   begin
-    TextCommand := RegOptEditor.Value;
-    TextCommand := ReplaceRegExpr('%package%',    TextCommand, Configuration.Package);
-    TextCommand := ReplaceRegExpr('%packagedir%', TextCommand, Configuration.DirPackage);
-    TextCommand := ReplaceRegExpr('%gamedir%',    TextCommand, Configuration.DirGame);
-    TextCommand := ReplaceRegExpr('%errfile%',    TextCommand, GetQuotedParam(TextFileError));
+    LTextCommand := RegOptEditor.Value;
+    LTextCommand := ReplaceRegExpr('%package%', LTextCommand, Configuration.Package);
+    LTextCommand := ReplaceRegExpr('%packagedir%', LTextCommand, Configuration.DirPackage);
+    LTextCommand := ReplaceRegExpr('%gamedir%', LTextCommand, Configuration.DirGame);
+    LTextCommand := ReplaceRegExpr('%errfile%', LTextCommand, GetQuotedParam(TextFileError));
 
-    if IndexLineError = 0
-      then TextCommand := ReplaceRegExpr('%errline%', TextCommand, '1')
-      else TextCommand := ReplaceRegExpr('%errline%', TextCommand, IntToStr(IndexLineError));
+    if IndexLineError = 0 then
+      LTextCommand := ReplaceRegExpr('%errline%', LTextCommand, '1')
+    else
+      LTextCommand := ReplaceRegExpr('%errline%', LTextCommand, IntToStr(IndexLineError));
 
-    if not LaunchProgram(TextCommand) then
-      Application.MessageBox('Unable to start specified source code editor.', PChar(Application.Title), MB_ICONERROR);
+    if not LaunchProgram(LTextCommand) then
+      MessageDlg('Unable to start specified source code editor.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0)
   end
-  else begin
-    Application.MessageBox('No source code editor specified.', PChar(Application.Title), MB_ICONERROR)
-  end;
+  else
+    MessageDlg('No source code editor specified.', TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 end;
 
 end.

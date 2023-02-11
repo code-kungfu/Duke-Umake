@@ -37,23 +37,23 @@ uses
 
 type
   TfrmLauncher = class(TForm)
-    BevelHints: TBevel;
-    ButtonBrowseProject: TBitBtn;
-    ButtonClose: TButton;
-    ButtonCompile: TButton;
-    ButtonOptions: TButton;
-    LabelHints: TLabel;
-    LabelHintsParagraph1: TLabel;
-    LabelHintsParagraph2: TLabel;
-    LabelSource: TLabel;
-    ComboBoxProject: TComboBox;
-    Note1: TLabel;
-    Note2: TLabel;
-    Label1: TLabel;
-    procedure ButtonBrowseProjectClick(Sender: TObject);
-    procedure ButtonCloseClick(Sender: TObject);
-    procedure ButtonOptionsClick(Sender: TObject);
-    procedure ComboBoxProjectChange(Sender: TObject);
+    bvlHints: TBevel;
+    btnBrowseProject: TBitBtn;
+    btnClose: TButton;
+    btnCompile: TButton;
+    btnOptions: TButton;
+    lblHints: TLabel;
+    lblHintsParagraph1: TLabel;
+    lblHintsParagraph2: TLabel;
+    lblSource: TLabel;
+    comProject: TComboBox;
+    lblNote1: TLabel;
+    lblNote2: TLabel;
+    lblNote3: TLabel;
+    procedure btnBrowseProjectClick(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
+    procedure btnOptionsClick(Sender: TObject);
+    procedure comProjectChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   protected
@@ -70,7 +70,7 @@ implementation
 
 {$REGION '-> Local Uses Clause <-'}
 uses
-  UMake.Forms.Options;
+  UMake.Forms.Options, System.IOUtils;
 {$ENDREGION}
 
 {$R *.DFM}
@@ -85,84 +85,82 @@ begin
 end;
 
 procedure TfrmLauncher.FormShow(Sender: TObject);
-var
-  IndexProject: Integer;
 begin
-  for IndexProject := 0 to Options.RegOptProjects.ItemCount - 1 do
-    ComboBoxProject.Items.Add(Options.RegOptProjects[IndexProject].Value);
+  for var LIndexProject: Integer := 0 to Options.RegOptProjects.ItemCount - 1 do
+    comProject.Items.Add(Options.RegOptProjects[LIndexProject].Value);
 
-  ComboBoxProject.Text := Options.RegOptProjects.Value;
-  ComboBoxProjectChange(ComboBoxProject);
+  comProject.Text := Options.RegOptProjects.Value;
+  comProjectChange(comProject);
 end;
 
 procedure TfrmLauncher.MessageDropFiles(var Msg: TWMDropFiles);
 var
-  LengthTextFileDropped: Integer;
-  TextFileDropped: string;
+  LLengthTextFileDropped: Integer;
+  LTextFileDropped: string;
 begin
-  LengthTextFileDropped := DragQueryFile(Msg.Drop, 0, nil, 0) + 1;
-  SetLength(TextFileDropped, LengthTextFileDropped);
+  LLengthTextFileDropped := DragQueryFile(Msg.Drop, 0, nil, 0) + 1;
+  SetLength(LTextFileDropped, LLengthTextFileDropped);
 
-  DragQueryFile(Msg.Drop, 0, PChar(TextFileDropped), LengthTextFileDropped);
+  DragQueryFile(Msg.Drop, 0, PChar(LTextFileDropped), LLengthTextFileDropped);
   DragFinish(Msg.Drop);
 
-  if FileExists(TextFileDropped) then
-    TextFileDropped := ExcludeTrailingBackslash(ExtractFilePath(TextFileDropped));
-  if AnsiSameText(ExtractFileName(TextFileDropped), 'Classes') then
-    TextFileDropped := ExcludeTrailingBackslash(ExtractFilePath(TextFileDropped));
+  if TDirectory.Exists(LTextFileDropped) then
+    LTextFileDropped := ExcludeTrailingBackslash(ExtractFilePath(LTextFileDropped));
 
-  ComboBoxProject.Text := TextFileDropped;
-  ComboBoxProject.SelectAll;
+  if SameText(ExtractFileName(LTextFileDropped), 'Classes') then
+    LTextFileDropped := ExcludeTrailingBackslash(ExtractFilePath(LTextFileDropped));
+
+  comProject.Text := LTextFileDropped;
+  comProject.SelectAll;
 end;
 
-procedure TfrmLauncher.ButtonBrowseProjectClick(Sender: TObject);
+procedure TfrmLauncher.btnBrowseProjectClick(Sender: TObject);
 var
-  TextDirPath: string;
+  LTextDirPath: string;
 begin
-  TextDirPath := BrowseFolder(Handle, 'Select the UnrealScript project directory you wish to compile:');
-
-  if Length(TextDirPath) > 0 then
+  LTextDirPath := BrowseFolder(Handle, 'Select the UnrealScript project directory you wish to compile:');
+  if LTextDirPath.Length > 0 then
   begin
-    if AnsiSameText(ExtractFileName(TextDirPath), 'Classes') then
-      TextDirPath := ExcludeTrailingBackslash(ExtractFilePath(TextDirPath));
+    if SameText(ExtractFileName(LTextDirPath), 'Classes') then
+      LTextDirPath := ExcludeTrailingBackslash(ExtractFilePath(LTextDirPath));
 
-    ComboBoxProject.Text := TextDirPath;
-    ComboBoxProjectChange(ComboBoxProject);
+    comProject.Text := LTextDirPath;
+    comProjectChange(comProject);
   end;
-
-  ComboBoxProject.SetFocus;
+  comProject.SetFocus;
 end;
 
-procedure TfrmLauncher.ButtonCloseClick(Sender: TObject);
+procedure TfrmLauncher.btnCloseClick(Sender: TObject);
 begin
   //Close;
 end;
 
-procedure TfrmLauncher.ComboBoxProjectChange(Sender: TObject);
+procedure TfrmLauncher.comProjectChange(Sender: TObject);
 var
-  TextDirPackage: string;
+  LTextDirPackage: string;
 begin
-  FreeAndNil(Configuration);
+  if Configuration <> nil then
+    Configuration.Free;
 
-  TextDirPackage := Trim(ComboBoxProject.Text);
-  if DirectoryExists(TextDirPackage) then
+  LTextDirPackage := Trim(comProject.Text);
+  if TDirectory.Exists(LTextDirPackage) then
   begin
-    TextDirPackage := GetLongPath(TextDirPackage);
-    TextDirPackage := ExcludeTrailingBackslash(TextDirPackage);
-
+    LTextDirPackage := GetLongPath(LTextDirPackage);
+    LTextDirPackage := ExcludeTrailingBackslash(LTextDirPackage);
     try
-      Configuration := TConfiguration.Create(ExtractFileName(TextDirPackage), ExtractFilePath(TextDirPackage));
+      Configuration := TConfiguration.Create(ExtractFileName(LTextDirPackage), ExtractFilePath(LTextDirPackage));
       Configuration.Read;
     except
-      on EConfiguration do FreeAndNil(Configuration);
+      on EConfiguration do
+        Configuration.Free;
     end;
   end;
 
-  ButtonCompile.Enabled := Assigned(Configuration);
-  ButtonCompile.Default := Assigned(Configuration);
+  btnCompile.Enabled := Assigned(Configuration);
+  btnCompile.Default := Assigned(Configuration);
 end;
 
-procedure TfrmLauncher.ButtonOptionsClick(Sender: TObject);
+procedure TfrmLauncher.btnOptionsClick(Sender: TObject);
 begin
   frmOptions.Configuration := Configuration;
   frmOptions.Options := Options;
