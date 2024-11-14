@@ -14,7 +14,7 @@ uses
   Vcl.Styles;
 
 {$R *.RES}
-{$R CursorHand.res}
+{$R 'UMakeRes.res' 'assets\UMakeRes.rc'}
 
 begin
   {$IF Defined(DEBUG)}

@@ -165,6 +165,9 @@
             <Form>frmShortcuts</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <RcCompile Include="assets\UMakeRes.rc">
+            <Form>UMakeResource.res</Form>
+        </RcCompile>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
